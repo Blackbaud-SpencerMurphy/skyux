@@ -23,7 +23,7 @@
 
         var dataSetBand = [
                 {
-                    name: 'John',
+                    name: 'John bbbbbbbbkasdfkjhsadlkfj\nhsadlkjfhkljsabckhabsdflkhbaslkhbvosahdgfoiyewr\niufhsakhfbkjahxbvlhdafgiuyasgdfuhbkcvbuihasgdfiugfknbzxfgkjhbzxckjhvbdifghviusfgkjhgdsfkjhsdbfvjhbxkjchvbkjhdsgfuhgsdvkjhbdskjfhbkdsfgvkjhsdbv\nkjhabdfskuhasvfkjghbvxkvbskdjhfbkjhasdgkjhbsakfjhaskjfghiuya\nsdgfjhsdbfvjkhbsadfksaiudyrgjkshadfgkjhsavkjhvasdkjfhgaskygfahbsefkhbsfuyvkjashgrfsjkhbfkjhsavfkjhga\nsdkjgrwuiyerfsdjhbfjkhsagruygsfjkhvbasdfkhjgaksjhdfguyasgdfjkhbvsdjhfbjh',
                     instrument: 'Rhythm guitar',
                     bio: '',
                     templated: {
@@ -165,7 +165,7 @@
                     self.data = newData;
                     self.gridOptions.data = newData;
                     self.gridOptions.loading = false;
-                });
+                }, 2000);
 
             });
 

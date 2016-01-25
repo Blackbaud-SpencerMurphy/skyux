@@ -1248,6 +1248,7 @@ reloading the grid with the current data after the event has fired.
                                 /*istanbul ignore else: sanity check */
                                 if (tableDomEl.addJSONData) {
                                     loadColumnTemplates(function () {
+                                        var origScrollTop = windowEl.scrollTop();
 
                                         if (locals.multiselect) {
                                             element.find('td').off('mousedown.gridmousedown');
@@ -1265,6 +1266,8 @@ reloading the grid with the current data after the event has fired.
                                         updateGridLoadedTimestampAndRowCount(rows ? rows.length : 0);
 
                                         setUpFancyCheckCell();
+
+                                        windowEl.scrollTop(origScrollTop);
 
                                     });
                                 }

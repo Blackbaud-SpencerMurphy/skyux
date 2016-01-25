@@ -1,3 +1,4 @@
+<bb-omnibar></bb-omnibar>
 <div ng-controller="GridTestController as gridCtrl">
     <div class="bb-omnibar-height-margin"></div>
     <button class="btn btn-primary" style="margin-bottom: 10px;" ng-click="gridCtrl.setSelections()">Set Drum Selection</button>
@@ -19,10 +20,6 @@
             <button type="button" class="btn bb-btn-secondary bb-grid-toolbar-btn" ng-click="gridCtrl.clickCustom()">This is a custom button</button>
         </bb-grid-toolbar>
     </bb-grid>
-    <div style="margin-top: 10px; margin-bottom: 10px;">
-        <button ng-click="gridCtrl.gridOptions.loading = true;">Begin loading</button>
-        <button ng-click="gridCtrl.gridOptions.loading = false;">End loading</button>
-    </div>
 
     <div class="clearfix"></div>
 
