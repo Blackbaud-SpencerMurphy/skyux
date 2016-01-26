@@ -24,7 +24,7 @@ module.exports = function (config) {
     config.set({
         port: 9876,
         browsers: [
-            'Chrome'
+            'IE'
         ]
     });
 };
