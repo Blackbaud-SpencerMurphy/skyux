@@ -15,7 +15,8 @@ module.exports = function (config) {
                 browser_version: '11.0',
                 os: 'Windows',
                 os_version: '8.1'
-            },
+            }
+            /*,
             bs_windows_edge: {
                 base: base,
                 browser: 'edge',
@@ -57,7 +58,7 @@ module.exports = function (config) {
                 device: 'Samsung Galaxy S5',
                 os: 'android',
                 os_version: '4.4'
-            }
+            }*/
         },
         shared = require('./karma.conf-shared.js');
 
