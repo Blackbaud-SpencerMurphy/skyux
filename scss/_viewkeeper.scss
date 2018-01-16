@@ -7,13 +7,13 @@ $viewkeeper-margin-top-small: $omnibar-height-small !default;
 body:not(.bb-viewkeeper-ignore-fixed) {
     .bb-viewkeeper-fixed {
         position: fixed;
-        z-index: 100;
+        z-index: $bb-zindex-viewkeeper;
         opacity: 0.95;
         filter: alpha(opacity=95);
         overflow: hidden;
     }
 
-    &:not(.omnibar-not-fixed) {
+    &:not(.omnibar-not-fixed):not(.bb-viewkeeper-no-omnibar) {
         .bb-viewkeeper-fixed,
         .viewkeeper-fixed {
             margin-top: $viewkeeper-margin-top;
@@ -26,6 +26,7 @@ body:not(.bb-viewkeeper-ignore-fixed) {
             }
         }
     }
+
     /*Special handling for jqGrid since it already specifies the position attribute with a more specific selector */
     .ui-jqgrid-hdiv {
         &.bb-viewkeeper-fixed,

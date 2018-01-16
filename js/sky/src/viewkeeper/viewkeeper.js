@@ -5,8 +5,12 @@
     'use strict';
 
     var CLS_VIEWKEEPER_FIXED = 'bb-viewkeeper-fixed',
+        CLS_VIEWKEEPER_NO_OMNIBAR = 'bb-viewkeeper-no-omnibar',
+        marginBottomOverrides = [],
+        marginTopOverrides = [],
         config = {
-            viewportMarginTop: 0
+            viewportMarginTop: 0,
+            hasOmnibar: true
         },
         ViewKeeper;
 
@@ -27,10 +31,51 @@
             "left": left
         });
 
-        /*istanbul ignore else: sanity check */
+        /*istanbul ignore else*/
+        /* sanity check */
         if (width !== null) {
             elQ.css({ "width": width });
         }
+    }
+
+    function fixEl(vk, boundaryInfo, fixedStyles) {
+        var elQ = angular.element(vk.el),
+            spacerHeight,
+            width;
+
+        if (boundaryInfo.spacerQ.length === 0) {
+            if (vk.setPlaceholderHeight) {
+                spacerHeight = boundaryInfo.elHeight;
+            } else {
+                spacerHeight = 0;
+            }
+            elQ.after(
+                '<div id="' + 
+                boundaryInfo.spacerId + 
+                '" style="height: ' + 
+                spacerHeight + 
+                'px;"></div>'
+            );
+        }
+
+        elQ.addClass(CLS_VIEWKEEPER_FIXED);
+
+        vk.currentElFixedTop = fixedStyles.elFixedTop;
+        vk.currentElFixedBottom = fixedStyles.elFixedBottom;
+        vk.currentElFixedLeft = fixedStyles.elFixedLeft;
+        vk.currentElFixedWidth = fixedStyles.elFixedWidth;
+
+        if (vk.setWidth) {
+            width = fixedStyles.elFixedWidth;
+        }
+
+        setElPosition(
+            elQ, 
+            fixedStyles.elFixedLeft, 
+            fixedStyles.elFixedTop, 
+            fixedStyles.elFixedBottom, 
+            width
+        );
     }
 
     function unfixEl(vk) {
@@ -52,6 +97,18 @@
         setElPosition(elQ, "", "", "", width);
     }
 
+    function getViewportMarginTop() {
+        return marginTopOverrides.length > 0 ? 
+            marginTopOverrides[marginTopOverrides.length - 1].margin : 
+            config.viewportMarginTop;
+    }
+
+    function getViewportMarginBottom() {
+        return marginBottomOverrides.length > 0 ? 
+            marginBottomOverrides[marginBottomOverrides.length - 1].margin : 
+            0;
+    }
+
     function calculateVerticalOffset(vk) {
         var offset,
             verticalOffSetElTop;
@@ -61,7 +118,8 @@
         if (vk.verticalOffSetEl) {
             verticalOffSetElTop = vk.verticalOffSetEl.css('top');
 
-            /*istanbul ignore else: sanity check */
+            /*istanbul ignore else*/
+            /* sanity check */
             if (verticalOffSetElTop) {
                 verticalOffSetElTop = parseInt(verticalOffSetElTop, 10);
                 if (isNaN(verticalOffSetElTop)) {
@@ -73,6 +131,129 @@
         }
 
         return offset;
+    }
+
+    function getBoundaryInfo(vk) {
+        var boundaryBottom,
+            boundaryOffset,
+            boundaryTop,
+            boundaryQ,
+            documentQ,
+            elQ,
+            scrollLeft,
+            scrollTop,
+            spacerId,
+            spacerQ,
+            elHeight;
+
+        elQ = angular.element(vk.el);
+
+        boundaryQ = angular.element(vk.boundaryEl);
+        spacerId = getSpacerId(vk);
+
+        spacerQ = angular.element("#" + spacerId);
+        documentQ = angular.element(window.document);
+
+        boundaryOffset = boundaryQ.offset();
+        boundaryTop = boundaryOffset.top;
+        boundaryBottom = boundaryTop + boundaryQ.height();
+
+        scrollLeft = documentQ.scrollLeft();
+        scrollTop = documentQ.scrollTop();
+
+        elHeight = elQ.outerHeight(true);
+
+        return {
+            boundaryBottom: boundaryBottom,
+            boundaryOffset: boundaryOffset,
+            boundaryQ: boundaryQ,
+            elHeight: elHeight,
+            scrollLeft: scrollLeft,
+            scrollTop: scrollTop,
+            spacerId: spacerId,
+            spacerQ: spacerQ
+        };
+    }
+
+    function shouldFixEl(vk, boundaryInfo, verticalOffSet) {
+        var anchorHeight,
+            anchorTop,
+            doFixEl,
+            elQ;
+
+        elQ = angular.element(vk.el);
+
+        if (boundaryInfo.spacerQ.length > 0) {
+            anchorTop = boundaryInfo.spacerQ.offset().top;
+            anchorHeight = boundaryInfo.spacerQ.outerHeight(true);
+        } else {
+            anchorTop = elQ.offset().top;
+            anchorHeight = boundaryInfo.elHeight;
+        }
+
+        if (vk.fixToBottom) {
+            //Fix el if the natural bottom of the element would not be on the screen
+            doFixEl = 
+                anchorTop + anchorHeight > 
+                boundaryInfo.scrollTop + (window.innerHeight - getViewportMarginBottom());
+        } else {
+            doFixEl = boundaryInfo.scrollTop + verticalOffSet + getViewportMarginTop() > anchorTop;
+        }
+
+        return doFixEl;
+    }
+
+    function getFixedStyles(vk, boundaryInfo, verticalOffSet) {
+        var elFixedBottom,
+            elFixedLeft,
+            elFixedTop,
+            elFixedWidth;
+
+        if (vk.fixToBottom) {
+            elFixedBottom = getViewportMarginBottom();
+        } else {
+            // If the element needs to be fixed, this will calculate its position.  The position 
+            // will be 0 (fully visible) unless the user is scrolling the boundary out of view.  
+            // In that case, the element should begin to scroll out of view with the
+            // rest of the boundary by setting its top position to a negative value.
+            elFixedTop = Math.min(
+                (boundaryInfo.boundaryBottom - boundaryInfo.elHeight) - boundaryInfo.scrollTop, 
+                verticalOffSet
+            );
+        }
+
+        elFixedWidth = boundaryInfo.boundaryQ.width();
+        elFixedLeft = boundaryInfo.boundaryOffset.left - boundaryInfo.scrollLeft;
+
+        return {
+            elFixedBottom: elFixedBottom,
+            elFixedLeft: elFixedLeft,
+            elFixedTop: elFixedTop,
+            elFixedWidth: elFixedWidth
+        };
+    }
+
+    function needsUpdating(vk, doFixEl, fixedStyles) {
+        if (
+            (
+                doFixEl && 
+                vk.currentElFixedLeft === fixedStyles.elFixedLeft && 
+                vk.currentElFixedTop === fixedStyles.elFixedTop && 
+                vk.currentElFixedBottom === fixedStyles.elFixedBottom && 
+                vk.currentElFixedWidth === fixedStyles.elFixedWidth
+            ) || 
+            (
+                !doFixEl && 
+                !(vk.currentElFixedLeft !== undefined && vk.currentElFixedLeft !== null)
+            )
+        ) {
+            // The element is either currently fixed and its position and width do not need 
+            // to change, or the element is not currently fixed and does not need to be fixed.  
+            // No changes are needed.
+            return false;
+        }
+
+        return true;
     }
 
     ViewKeeper = function (options) {
@@ -90,7 +271,7 @@
         vk.setPlaceholderHeight = (options.setPlaceholderHeight !== false);
         vk.onStateChanged = options.onStateChanged;
         vk.isFixed = false;
-
+        
         if (options.verticalOffSetElId) {
             vk.verticalOffSetEl = angular.element('#' + options.verticalOffSetElId);
 
@@ -107,34 +288,13 @@
     ViewKeeper.prototype = {
 
         syncElPosition: function () {
-            var anchorTop,
-                anchorHeight,
+            var boundaryInfo,
+                doFixEl,
                 isCurrentlyFixed,
-                currentElFixedLeft,
-                currentElFixedTop,
-                currentElFixedBottom,
-                currentElFixedWidth,
-                documentQ,
-                fixEl,
-                boundaryBottom,
-                boundaryOffset,
-                boundaryQ,
-                boundaryTop,
-                elFixedLeft,
-                elFixedTop,
-                elFixedBottom,
-                elFixedWidth,
-                elHeight,
+                fixedStyles,
                 elQ,
-                needsUpdating,
-                scrollLeft,
-                scrollTop,
-                spacerHeight,
-                spacerId,
-                spacerQ,
                 verticalOffSet,
-                vk = this,
-                width;
+                vk = this;
 
             isCurrentlyFixed = vk.isFixed;
 
@@ -147,86 +307,15 @@
                 return;
             }
 
-            boundaryQ = angular.element(vk.boundaryEl);
-            spacerId = getSpacerId(vk);
+            boundaryInfo = getBoundaryInfo(vk);
+            fixedStyles = getFixedStyles(vk, boundaryInfo, verticalOffSet);
 
-            spacerQ = angular.element("#" + spacerId);
-            documentQ = angular.element(window.document);
+            doFixEl = shouldFixEl(vk, boundaryInfo, verticalOffSet);
 
-            boundaryOffset = boundaryQ.offset();
-            boundaryTop = boundaryOffset.top;
-            boundaryBottom = boundaryTop + boundaryQ.height();
-
-            scrollLeft = documentQ.scrollLeft();
-            scrollTop = documentQ.scrollTop();
-
-            elHeight = elQ.outerHeight(true);
-
-            if (vk.fixToBottom) {
-                elFixedBottom = 0;
-            } else {
-                // If the element needs to be fixed, this will calculate its position.  The position will be 0 (fully visible) unless
-                // the user is scrolling the boundary out of view.  In that case, the element should begin to scroll out of view with the
-                // rest of the boundary by setting its top position to a negative value.
-                elFixedTop = Math.min((boundaryBottom - elHeight) - scrollTop, verticalOffSet);
-            }
-
-
-            elFixedWidth = boundaryQ.width();
-            elFixedLeft = boundaryOffset.left - scrollLeft;
-
-            currentElFixedLeft = vk.currentElFixedLeft;
-            currentElFixedTop = vk.currentElFixedTop;
-            currentElFixedBottom = vk.currentElFixedBottom;
-            currentElFixedWidth = vk.currentElFixedWidth;
-
-            if (spacerQ.length > 0) {
-                anchorTop = spacerQ.offset().top;
-                anchorHeight = spacerQ.outerHeight(true);
-            } else {
-                anchorTop = elQ.offset().top;
-                anchorHeight = elHeight;
-            }
-
-            if (vk.fixToBottom) {
-                //Fix el if the natural bottom of the element would not be on the screen
-                fixEl = (anchorTop + anchorHeight > scrollTop + window.innerHeight);
-            } else {
-                fixEl = scrollTop + verticalOffSet + config.viewportMarginTop > anchorTop;
-            }
-
-            if ((fixEl && currentElFixedLeft === elFixedLeft && currentElFixedTop === elFixedTop && currentElFixedBottom === elFixedBottom && currentElFixedWidth === elFixedWidth) || (!fixEl && !(currentElFixedLeft !== undefined && currentElFixedLeft !== null))) {
-                // The element is either currently fixed and its position and width do not need to change, or the element is not
-                // currently fixed and does not need to be fixed.  No changes are needed.
-                needsUpdating = false;
-            } else {
-                needsUpdating = true;
-            }
-
-            if (needsUpdating) {
-                if (fixEl) {
+            if (needsUpdating(vk, doFixEl, fixedStyles)) {
+                if (doFixEl) {
                     vk.isFixed = true;
-                    if (spacerQ.length === 0) {
-                        if (vk.setPlaceholderHeight) {
-                            spacerHeight = elHeight;
-                        } else {
-                            spacerHeight = 0;
-                        }
-                        elQ.after('<div id="' + spacerId + '" style="height: ' + spacerHeight + 'px;"></div>');
-                    }
-
-                    elQ.addClass(CLS_VIEWKEEPER_FIXED);
-
-                    vk.currentElFixedTop = elFixedTop;
-                    vk.currentElFixedBottom = elFixedBottom;
-                    vk.currentElFixedLeft = elFixedLeft;
-                    vk.currentElFixedWidth = elFixedWidth;
-
-                    if (vk.setWidth) {
-                        width = elFixedWidth;
-                    }
-
-                    setElPosition(elQ, elFixedLeft, elFixedTop, elFixedBottom, width);
+                    fixEl(vk, boundaryInfo, fixedStyles);
                 } else {
                     vk.isFixed = false;
                     unfixEl(vk);
@@ -262,7 +351,7 @@
                 anchorTop = elQ.offset().top;
             }
 
-            documentQ.scrollTop(anchorTop - verticalOffset - config.viewportMarginTop);
+            documentQ.scrollTop(anchorTop - verticalOffset - getViewportMarginTop());
         },
 
         destroy: function () {
@@ -292,6 +381,28 @@
             return {
                 create: function (options) {
                     return new ViewKeeper(options);
+                },
+                addViewportMarginBottomOverride: function (value) {
+                    marginBottomOverrides.push(value);
+                },
+                removeViewportMarginBottomOverride: function (value) {
+                    var index = marginBottomOverrides.indexOf(value);
+
+                    /*istanbul ignore else */
+                    if (index > -1) {
+                        marginBottomOverrides.splice(index, 1);
+                    }
+                },
+                addViewportMarginTopOverride: function (value) {
+                    marginTopOverrides.push(value);
+                },
+                removeViewportMarginTopOverride: function (value) {
+                    var index = marginTopOverrides.indexOf(value);
+
+                    /*istanbul ignore else */
+                    if (index > -1) {
+                        marginTopOverrides.splice(index, 1);
+                    }
                 }
             };
         })
@@ -299,9 +410,13 @@
             function mediaBreakpointHandler(breakpoints) {
                 //For user agents in which the omnibar follows you down the page, the ViewKeeper needs
                 //to adjust for the height of the omnibar.
-
-                //Ideally these values should be driven from a more appropriate source (omnibar js?)
-                bbViewKeeperConfig.viewportMarginTop = breakpoints.xs ? 50 : 30;
+                if (bbViewKeeperConfig.hasOmnibar) {
+                    //Ideally these values should be driven from a more appropriate source (omnibar js?)
+                    bbViewKeeperConfig.viewportMarginTop = breakpoints.xs ? 50 : 30;
+                    angular.element('body').removeClass(CLS_VIEWKEEPER_NO_OMNIBAR);
+                } else {
+                    angular.element('body').addClass(CLS_VIEWKEEPER_NO_OMNIBAR);
+                }
             }
 
             if (/iPad|iPod|iPhone/i.test($window.navigator.userAgent)) {
@@ -355,7 +470,6 @@
                     }
                 });
             }
-
             return {
                 link: link,
                 restrict: 'A',
@@ -415,7 +529,8 @@
                                 });
                             } else if (scrollingDown) {
                                 if (element.offset().top + element.height() >= scrollPos + $window.innerHeight) {
-                                    /*istanbul ignore else: sanity check */
+                                    /*istanbul ignore else*/
+                                    /* sanity check */
                                     if (!tempTop) {
                                         tempTop = element.offset().top - elementStart;
                                     }
@@ -434,7 +549,8 @@
                                 }
                             } else {
                                 if (element.offset().top < scrollPos + verticalOffset) {
-                                    /*istanbul ignore else: sanity check */
+                                    /*istanbul ignore else*/
+                                    /* sanity check */
                                     if (!tempTop) {
                                         tempTop = element.offset().top - elementStart;
                                     }

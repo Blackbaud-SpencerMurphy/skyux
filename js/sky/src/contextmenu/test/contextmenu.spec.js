@@ -7,21 +7,27 @@ describe('Context menu', function () {
     var $animate,
         $compile,
         $document,
-        $scope;
+        $scope,
+        bbResources;
 
     beforeEach(module(
         'ngAnimateMock',
         'sky.contextmenu',
         'sky.templates',
-        'template/accordion/accordion.html',
-        'template/accordion/accordion-group.html'
+        'uib/template/accordion/accordion.html',
+        'uib/template/accordion/accordion-group.html'
     ));
 
-    beforeEach(inject(function (_$rootScope_, _$compile_, _$document_, _$animate_) {
+
+    beforeEach(inject(function (_$rootScope_, _$compile_, _$document_, _$animate_, _bbResources_) {
+
         $compile = _$compile_;
         $scope = _$rootScope_.$new();
         $document = _$document_;
         $animate = _$animate_;
+        bbResources = _bbResources_;
+
+        bbResources.context_menu_default_label = '##(G)JG#F()DBNEWT#@)G';
 
         $scope.locals = {
             items: [
@@ -58,12 +64,11 @@ describe('Context menu', function () {
         $compile(el)($scope);
         $scope.$digest();
         expect(el.find('div.bb-context-menu.dropdown').length).toBe(1);
-        expect(el.find('button.btn.bb-btn-secondary.bb-context-menu-btn.dropdown-toggle i.fa.fa-ellipsis-h').length).toBe(1);
-
+        expect(el.find('bb-context-menu-button button.btn.dropdown-toggle.bb-btn-secondary.bb-context-menu-btn i.fa.fa-ellipsis-h').length).toBe(1);
         el.find('.bb-context-menu-btn').click();
         $scope.$digest();
 
-        itemsEl = el.find('ul li a');
+        itemsEl = el.find('.bb-dropdown-menu .bb-dropdown-item a');
         expect(itemsEl.length).toBe(3);
 
         for (i = 0; i < $scope.locals.items.length; i++) {
@@ -72,6 +77,10 @@ describe('Context menu', function () {
             itemsEl.eq(i).click();
             expect($scope.locals.items[i].clicked).toBe(true);
         }
+    }
+
+    function validateButtonLabel(el, label) {
+        expect(el.find('.bb-context-menu-btn')).toHaveAttr('aria-label', label);
     }
 
     it('can create a context menu dropdown using bb-context-menu-item', function () {
@@ -85,8 +94,6 @@ describe('Context menu', function () {
             '</div>'
         ].join(''));
 
-
-
         verifyContextMenuDropdown(el);
 
     });
@@ -95,8 +102,8 @@ describe('Context menu', function () {
         var el = angular.element([
             '<div>',
             '<bb-context-menu>',
-            '   <li role="presentation" ng-repeat="item in locals.items">',
-            '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></li>',
+            '   <div class="bb-dropdown-item" role="presentation" ng-repeat="item in locals.items">',
+            '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></div>',
             '</bb-context-menu>',
             '</div>'
         ].join(''));
@@ -107,20 +114,45 @@ describe('Context menu', function () {
     it('can create a context menu dropdown using angular ui bootstrap dropdown and bb-context-menu-button', function () {
         var el = angular.element([
             '<div>',
-            '<div class="bb-context-menu" dropdown>',
-            '<bb-context-menu-button dropdown-toggle></bb-context-menu-button>',
-            '<ul class="dropdown-menu" role="menu">',
-            '   <li role="presentation" ng-repeat="item in locals.items">',
-            '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></li>',
-            '</ul>',
+            '<div class="bb-context-menu" uib-dropdown>',
+            '<bb-context-menu-button bb-context-menu-button-dropdown-toggle></bb-context-menu-button>',
+            '<div class="dropdown-menu bb-dropdown-menu" role="menu">',
+            '   <div class="bb-dropdown-item" role="presentation" ng-repeat="item in locals.items">',
+            '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></div>',
+            '</div>',
             '</div>',
             '</div>'
         ].join(''));
         verifyContextMenuDropdown(el);
     });
 
+    it('should add a default localizable accessibility label to the context menu button', function () {
+        var el = $compile(
+            '<bb-context-menu></bb-context-menu>'
+        )($scope);
+
+        $scope.$digest();
+
+        validateButtonLabel(el, bbResources.context_menu_default_label);
+    });
+
+    it('should allow a custom accessibility label to be specified', function () {
+        var el = $compile(
+            '<bb-context-menu bb-context-menu-label="{{label}}"></bb-context-menu>'
+        )($scope);
+
+        $scope.label = 'Test label';
+        $scope.$digest();
+
+        validateButtonLabel(el, 'Test label');
+    });
+
     describe('submenu directive', function () {
-        function getAccordionTitle(el) {
+        function getAccordionTitleTransclude(el) {
+            return el.find('.bb-submenu .panel-title .accordion-toggle > span > div > ng-transclude');
+        }
+
+        function getAccordionTitleAttribute(el) {
             return el.find('.bb-submenu .panel-title .accordion-toggle > span > div span');
         }
 
@@ -141,14 +173,14 @@ describe('Context menu', function () {
         }
 
         function getDropdownMenu(el) {
-            return el.find('ul.dropdown-menu');
+            return el.find('.dropdown-menu');
         }
 
         function getDropdownButton(el) {
             return el.find('button.bb-context-menu-btn');
         }
 
-        function testSubmenu(el) {
+        function testSubmenu(el, isTransclude) {
             var submenuItems,
                 firstClicked = false,
                 secondClicked = false;
@@ -167,8 +199,12 @@ describe('Context menu', function () {
             $scope.$digest();
 
             getDropdownButton(el).click();
-
-            expect(getAccordionTitle(el)).toHaveText('Submenu');
+            if (isTransclude) {
+                expect(getAccordionTitleTransclude(el)).toHaveText('Submenu');
+            } else {
+                expect(getAccordionTitleAttribute(el)).toHaveText('Submenu');
+            }
+            
             expect(getChevronIcon(el).length).toBe(1);
 
             expect(getAccordionPanel(el)).not.toHaveClass('in');
@@ -201,22 +237,21 @@ describe('Context menu', function () {
                 '<div>',
                 '<div class="bb-context-menu" dropdown>',
                 '<bb-context-menu-button dropdown-toggle></bb-context-menu-button>',
-                '<ul class="dropdown-menu" role="menu">',
-                '   <li role="presentation" ng-repeat="item in locals.items">',
-                '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></li>',
-                '   <li role="presentation">',
+                '<div class="dropdown-menu bb-dropdown-menu" role="menu">',
+                '   <div class="bb-dropdown-item" role="presentation" ng-repeat="item in locals.items">',
+                '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></div>',
+                '   <div class="bb-dropdown-item" role="presentation">',
                 '   <bb-submenu bb-submenu-heading="locals.heading">',
                 '       <a role="menuitem" href="javascript:void(0)" ng-click="locals.firstClick()">First Item</a>',
                 '       <a role="menuitem" href="javascript:void(0)" ng-click="locals.secondClick()">Second Item</a>',
                 '   </bb-submenu>',
-                '   </li>',
-                '</ul>',
+                '   </div>',
+                '</div>',
                 '</div>',
                 '</div>'
             ].join(''));
 
-            testSubmenu(el);
-
+            testSubmenu(el, false);
         });
 
         it('can have a collapsible submenu with bbSubmenuHeading directive', function () {
@@ -224,10 +259,10 @@ describe('Context menu', function () {
                 '<div>',
                 '<div class="bb-context-menu" dropdown>',
                 '<bb-context-menu-button dropdown-toggle></bb-context-menu-button>',
-                '<ul class="dropdown-menu" role="menu">',
-                '   <li role="presentation" ng-repeat="item in locals.items">',
-                '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></li>',
-                '   <li role="presentation">',
+                '<div class="dropdown-menu bb-dropdown-menu" role="menu">',
+                '   <div class="bb-dropdown-item" role="presentation" ng-repeat="item in locals.items">',
+                '       <a role="menuitem" href="javascript:void(0)" ng-click="item.onClick()">{{item.text}}</a></div>',
+                '   <div class="bb-dropdown-item" role="presentation">',
                 '   <bb-submenu>',
                 '       <bb-submenu-heading>',
                 '           {{locals.heading}}',
@@ -235,13 +270,14 @@ describe('Context menu', function () {
                 '       <a role="menuitem" href="javascript:void(0)" ng-click="locals.firstClick()">First Item</a>',
                 '       <a role="menuitem" href="javascript:void(0)" ng-click="locals.secondClick()">Second Item</a>',
                 '   </bb-submenu>',
-                '   </li>',
-                '</ul>',
+                '   </div>',
+                '</div>',
                 '</div>',
                 '</div>'
             ].join(''));
 
-            testSubmenu(el);
+            testSubmenu(el, true);
         });
+
     });
 });

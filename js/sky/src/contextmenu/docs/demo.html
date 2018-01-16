@@ -3,7 +3,7 @@
     <p>
       For simple dropdowns, you can use <code>bb-context-menu-item</code> with <code>bb-context-menu</code>.
     </p>
-    <bb-context-menu>
+    <bb-context-menu bb-context-menu-label="Some label" bb-context-menu-append-to-body="true">
       <bb-context-menu-item ng-repeat="item in contextMenuCtrl.items" bb-context-menu-action="item.onClick()">{{item.text}}</bb-context-menu-item>
     </bb-context-menu>
   </div>
@@ -14,13 +14,13 @@
     </p>
     <div>
       <bb-context-menu>
-        <li role="presentation">
-          <a role="menuitem" href="javascript:void(0)" ng-click="contextMenuCtrl.doAction('Action Above')">Action Above</a>
-        </li>
-        <li class="divider"></li>
-        <li class="disabled" role="presentation">
-          <a role="menuitem" href="javascript:void(0)" ng-click="contextMenuCtrl.doAction('Action Below')">Action Below</a>
-        </li>
+        <div class="bb-dropdown-item" role="presentation">
+          <a role="menuitem" href="javascript:void(0)" ng-click="contextMenuCtrl.doAction('Action Above')">Action above</a>
+        </div>
+        <div class="bb-dropdown-item divider"></div>
+        <div class="disabled bb-dropdown-item" role="presentation">
+          <a aria-disabled="true" tabindex="-1" role="menuitem" href="javascript:void(0)" ng-click="contextMenuCtrl.doAction('Action Below')">Action below</a>
+        </div>
       </bb-context-menu>
     </div>
     <p></p>
@@ -28,7 +28,7 @@
       <button type="button" class="btn btn-primary" ng-click="contextMenuCtrl.openDropdown($event)">Open third menu</button>
       <p></p>
       <div class="bb-context-menu" uib-dropdown is-open="contextMenuCtrl.isOpen">
-        <bb-context-menu-button uib-dropdown-toggle></bb-context-menu-button>
+        <bb-context-menu-button bb-context-menu-button-dropdown-toggle></bb-context-menu-button>
         <ul uib-dropdown-menu role="menu">
 
           <li role="presentation">

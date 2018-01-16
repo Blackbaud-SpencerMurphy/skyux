@@ -3,7 +3,68 @@
 (function () {
     'use strict';
 
-    function GridTestController($scope, $filter) {
+    function RunTemplateCache($templateCache) {
+        $templateCache.put('bbGrid/samples/date.html', '<div>{{data | date: \'medium\'}}</div>');
+    }
+
+    RunTemplateCache.$inject = ['$templateCache'];
+
+    function GridFilterController($uibModalInstance, existingFilters) {
+        var self = this;
+
+        function clearAllFilters() {
+            self.filters = {
+            };
+        }
+        
+        function transformFiltersToArray(filters) {
+            var result = [];
+
+            if (filters.playsGuitar) {
+                result.push({name: 'guitar', value: true, label: 'plays guitar'});
+            }
+
+            if (filters.playsDrums) {
+                result.push({name: 'drums', value: true, label: 'plays drums'});
+            }
+
+            return result;
+        }
+
+        function transformArrayToFilters(array) {
+            var i,
+                filters = {};
+
+            for (i = 0; i < array.length; i++) {
+                if (array[i].name === 'guitar') {
+                    filters.playsGuitar = array[i].value;
+                }
+
+                if (array[i].name === 'drums') {
+                    filters.playsDrums = array[i].value;
+                }
+            }
+
+            return filters;
+        }
+
+        function applyFilters() {
+            var result = transformFiltersToArray(self.filters);
+            $uibModalInstance.close(result);
+        }
+
+
+        if (!existingFilters) {
+            clearAllFilters();
+        } else {
+            self.filters = transformArrayToFilters(existingFilters);
+        }
+
+        self.clearAllFilters = clearAllFilters;
+        self.applyFilters = applyFilters;
+    }
+
+    function GridTestController($scope, $filter, bbModal) {
         var self = this,
             action1,
             action2,
@@ -128,6 +189,33 @@
             }
             ];
 
+        self.showGrid = false;
+        self.showWait = false;
+        self.showPaged = false;
+        self.showLoading = false;
+
+        function showGridClicked(showOptions) {
+            if (showOptions.screenshot_grid) {
+                self.showGrid = !self.showGrid;
+            }
+            if (showOptions.screenshot_grid_page) {
+                self.showPaged = !self.showPaged;
+            }
+            if (showOptions.screenshot_grid_wait) {
+                self.showWait = !self.showWait;
+            }
+            if (showOptions.screenshot_grid_no_flyout) {
+                self.showNoFlyout = !self.showNoFlyout;
+            }
+
+            if (showOptions.screenshot_grid_loading) {
+
+                self.showLoading = !self.showLoading;
+            }
+        }
+
+        self.showGridClicked = showGridClicked;
+
         function applyFilters() {
             self.appliedFilters.instruments = [];
             if (self.guitarFilter) {
@@ -233,7 +321,15 @@
                     jsonmap: 'mydate',
                     id: 5,
                     name: 'mydate',
-                    width_all: 200
+                    width_all: 200,
+                    template_url: 'bbGrid/samples/date.html'
+                },
+                {
+                    caption: 'Caption with reaaaaaaaaaaly long name like reeeeediculous',
+                    jsonmap: 'long',
+                    name: 'long',
+                    id: 6,
+                    description: 'This description is long tooo like it is the longest thing I have ever seen.'
                 }
             ],
             data: dataSetBand,
@@ -251,12 +347,8 @@
                 }
             },
             multiselect: true,
-            sortOptions: {
-                excludedColumns: ['bio']
-            },
             selectedColumnIds: [1, 2, 3, 5],
-            columnPickerHelpKey: 'bb-security-users.html',
-            columnPickerMode: 'list'
+            columnPickerHelpKey: 'bb-security-users.html'
         };
 
         self.gridOptions2 = {
@@ -292,11 +384,75 @@
             onAddClickLabel: 'Add button',
             selectedColumnIds: [1, 2, 3],
             columnPickerHelpKey: 'bb-security-users.html',
-            sortOptions: {
-                descending: true
-            },
             hasInlineFilters: true,
             filters: {}
+        };
+
+        self.sortOptions = [
+                {
+                    id: 1,
+                    label: 'Name (A - Z)',
+                    name: 'name',
+                    descending: false
+                },
+                {
+                    id: 2,
+                    label: 'Name (Z - A)',
+                    name: 'name',
+                    descending: true
+                },
+                {
+                    id: 3,
+                    label: 'Instrument (A - Z)',
+                    name: 'instrument',
+                    descending: false
+                },
+                {
+                    id: 4,
+                    label: 'Instrument (Z - A)',
+                    name: 'instrument',
+                    descending: true
+                },
+                {
+                    id: 5,
+                    label: 'Date (newest first)',
+                    name: 'mydate',
+                    descending: true
+
+                },
+                {
+                    id: 6,
+                    label: 'Date (oldest first)',
+                    name: 'mydate',
+                    descending: false
+                }
+            ];
+
+        function sortItems(item) {
+            self.gridOptions.data.sort(function (a, b) {
+                var descending = item.descending ? -1 : 1,
+                    sortProperty = item.name;
+                if (a[sortProperty] > b[sortProperty]) {
+                    return (descending);
+                } else if (a[sortProperty] < b[sortProperty]) {
+                    return (-1 * descending);
+                } else {
+                    return 0;
+                }
+            });
+
+            self.gridOptions.sortOptions = {
+                column: item.name,
+                descending: item.descending
+            };
+        }
+
+        self.sortItems = sortItems;
+
+        self.gridOptions3 = {
+            columns: self.gridOptions2.columns,
+            selectedColumnIds: self.gridOptions2.selectedColumnIds,
+            loading: true
         };
 
         self.paginationOptions = {
@@ -365,27 +521,59 @@
             }
         }
 
-        function filterAndSearch() {
+        function filterAndSearch(filters, searchText) {
             var filteredData = [],
                 searchedData = [];
 
-            filteredData = filter(dataSetBand, self.gridOptions.filters);
-            searchedData = search(filteredData, self.gridOptions.searchText);
+            filteredData = filter(dataSetBand, filters);
+            searchedData = search(filteredData, searchText);
             self.gridOptions.data = searchedData;
 
         }
 
+        function openFilters() {
+            bbModal
+                .open({
+                    controller: 'GridFilterController as filterCtrl',
+                    templateUrl: 'demo/grids/filters.html',
+                    resolve: {
+                        existingFilters: function () {
+                            
+                            return angular.copy(self.appliedFilters.instruments);
+                        }
+                    }
+                })
+                .result
+                .then(function (result) {
+                    self.appliedFilters.instruments = angular.copy(result);
+                    filterAndSearch(self.appliedFilters, self.searchText);
+
+                });
+        }
+
+        self.openFilters = openFilters;
+
+        function onGridSearch(searchText) {
+            self.searchText = searchText;
+            filterAndSearch(self.searchText, self.appliedFilters);
+        }
+
+        self.onGridSearch = onGridSearch;
+
         $scope.$watch(function () {
             return self.gridOptions.filters;
         }, function () {
-            filterAndSearch();
+            filterAndSearch(self.gridOptions.filters, self.searchText);
         });
 
     }
 
-    GridTestController.$inject = ['$scope', '$filter'];
+    GridTestController.$inject = ['$scope', '$filter', 'bbModal'];
+    GridFilterController.$inject = ['$uibModalInstance', 'existingFilters'];
 
     angular.module('screenshots', ['sky'])
+    .run(RunTemplateCache)
+    .controller('GridFilterController', GridFilterController)
     .controller('GridTestController', GridTestController);
 
 }());

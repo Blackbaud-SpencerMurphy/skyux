@@ -1,0 +1,21 @@
+
+<div ng-controller="SectionedFormTestController as secFormTestCtrl">
+    <div class="bb-screenshot-noanim" >
+        <form id="sectionedForm">
+            <bb-sectioned-form bb-sectioned-form-sections="secFormTestCtrl.sections"></bb-sectioned-form>
+        </form>
+    </div>
+    <button style="margin-top: 15px;" class="btn btn-primary bb-test-sectioned" type="button" ng-click="secFormTestCtrl.showMobile()">Show mobile</button>
+</div>
+
+<script type="text/ng-template" id="demo/sectionedform/section1.html">
+    <div>
+        <label>Section 1</label>
+    </div>
+</script>
+
+<script type="text/ng-template" id="demo/sectionedform/section2.html">
+    <div>
+        <label>Section 2</label>
+    </div>
+</script>

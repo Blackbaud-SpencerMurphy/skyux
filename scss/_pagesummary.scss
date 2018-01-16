@@ -7,15 +7,16 @@
 }
 
 .bb-page-summary-title {
+    @include bb-page-heading();
     margin-top: 0;
     margin-bottom: $margin-half;
 }
 
 .bb-page-summary-subtitle {
-    font-size: $bb-font-size-xl;
-    font-weight: 400;
+    @include bb-emphasized();
     margin-top: 0;
     margin-bottom: $margin;
+    line-height: $headings-line-height;
 }
 
 .bb-page-summary-status {
@@ -31,7 +32,9 @@
 }
 
 .bb-page-summary-image {
-    margin-bottom: $margin-double;
+  .bb-file-drop-col {
+      margin-bottom: 0;
+  }
 }
 
 @media (min-width: $screen-sm-min) {
@@ -51,6 +54,8 @@
         width: $bb-avatar-width;
         margin-left: auto;
         margin-right: auto;
+        margin-bottom: $margin;
+
     }
 
     .bb-page-summary-key-info {

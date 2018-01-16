@@ -1,5 +1,4 @@
 @import "mixins";
-@import "animation/animate";
 
 .bb-tile {
     clear: both;
@@ -13,20 +12,22 @@
         -moz-border-right-colors: none;
         -moz-border-top-colors: none;
         background-color: #fff;
-        border-color: $border-color;
-        border-image: none;
-        border-style: solid solid none;
-        border-width: 4px 0px 0;
+        @include bb-border(tile);
         color: inherit;
         margin-bottom: 0;
-        height: 48px;
         cursor: pointer;
         padding: 0;
+      
+        &::after {
+            display: block;
+            font-size: 0;
+            content: " ";
+            clear: both;
+            height: 0;
+        }
 
         .bb-tile-header {
-            font-family: $bb-font-family-narrow;
-            font-size: 22px;
-            font-weight: 100;
+            @include bb-section-heading();
             margin: 0;
             padding: 9px $tile-header-tool-padding;
             text-overflow: ellipsis;
@@ -95,11 +96,9 @@
 }
 
 .bb-tile-header-content {
-    color: $bb-color-green;
     display: inline-block;
-    font-family: $bb-font-family-narrow;
-    font-size: 18px;
-    font-weight: 400;
+    @include bb-headline();
+    color: $sky-text-color-action-primary;
     opacity: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -107,24 +106,23 @@
     max-width: 50%;
 }
 
- .bb-tile.collapsed .bb-tile-header-content {
-     @include transition(opacity 0.5s);
+.bb-tile.collapsed .bb-tile-header-content {
      opacity: 1;
 }
 
-.bb-tile.collapsible .bb-tile-header-content {
-    @include transition(opacity 0.5s);
+.bb-tile-header-content {
     opacity: 0;
+    transition: 0.5s linear all;
 }
 
 .bb-tile-header-check {
-    font-size: 16px;
+    font-size: 20px;
 }
 
 .bb-tile-content {
     background-color: #fff;
     color: inherit;
-    border-color: $border-color;
+    @include bb-border(light, top, bottom);
     border-image: none;
     border-style: solid solid none;
     border-width: 1px 0;
@@ -144,12 +142,9 @@ tiles behave on a modal form.*/
 .modal-body {
     .bb-tile {
         .bb-tile-title {
-            height: 32px;
-
+            
             .bb-tile-header {
-                font-family: $font-family-base;
-                font-size: 13px;
-                font-weight: 600;
+                @include bb-subsection-heading();
                 margin: 0;
                 padding: 7px $tile-header-tool-padding;
             }
@@ -183,21 +178,21 @@ tiles behave within a column of tiles.*/
 
 .toolbar {
     &.bb-tile-toolbar {
-        border: 1px solid $border-color;
-        border-right: none;
-        border-left: none;
-        border-top: none;
+       @include bb-border(light);
+       border-top: none;
+       border-left: none;
+       border-right: none;
     }
 }
 
 .bb-tile-chevron,
 .bb-tile-settings {
-    color: #D1DADE;
     float: left;
     margin: 16px $tile-header-tool-padding 16px 0;
     padding: 0;
     background-color: transparent;
     border: none;
+    @include bb-icon-button-borderless;
 }
 
 .modal-body {
@@ -213,8 +208,12 @@ tiles behave within a column of tiles.*/
     padding: 15px;
 }
 
+.bb-tile-content-section:not(:last-child) {
+  @include bb-border(light);
+}
+
 .bb-tile-grab-handle {
-    color: #E7EAEC;
+    @include bb-icon-button-borderless;  
     cursor: move;
     cursor: -webkit-grab;
     cursor: -moz-grab;

@@ -1,5 +1,5 @@
 <div ng-controller="ChecklistTestController as checklistCtrl">
-  <h3>List Example</h3>
+  <h3>List example</h3>
   <bb-checklist
                 bb-checklist-items="checklistCtrl.listItems"
                 bb-checklist-selected-items="checklistCtrl.selectedListItems"
@@ -8,6 +8,10 @@
                 bb-checklist-no-items-message="No columns found"
                 bb-checklist-categories="['Constituent', 'Giving', 'Miscellaneous']"
                 bb-checklist-mode="list"
+                bb-checklist-subset-label="'Hide inactive'"
+                bb-checklist-subset-property="inactive"
+                bb-checklist-subset-exclude
+                bb-checklist-only-selected
                 bb-checklist-filter-local>
   </bb-checklist>
   <p></p>
@@ -23,7 +27,30 @@
       <li ng-repeat="item in checklistCtrl.selectedListItems">{{item.title}}</li>
     </ul>
   </div>
-  <h3>Grid Example</h3>
+  <h3>Single select example</h3>
+  <bb-checklist
+                bb-checklist-items="checklistCtrl.listItemsSingle"
+                bb-checklist-selected-items="checklistCtrl.selectedSingleItem"
+                bb-checklist-include-search="checklistCtrl.includeSearch"
+                bb-checklist-search-placeholder="Search for columns"
+                bb-checklist-no-items-message="No columns found"
+                bb-checklist-categories="['Constituent', 'Giving', 'Miscellaneous']"
+                bb-checklist-mode="list"
+                bb-checklist-select-style="single"
+                bb-checklist-subset-label="'Show inactive'"
+                bb-checklist-subset-property="inactive"
+                bb-checklist-filter-local>
+  </bb-checklist>
+  <p></p>
+  <hr>
+  <p></p>
+  <div>
+    <label>Selected item:</label>
+    <ul>
+      <li ng-repeat="item in checklistCtrl.selectedSingleItem">{{item.title}}</li>
+    </ul>
+  </div>
+  <h3>Grid example</h3>
   <bb-checklist
                 bb-checklist-items="checklistCtrl.items"
                 bb-checklist-selected-items="checklistCtrl.selectedItems"

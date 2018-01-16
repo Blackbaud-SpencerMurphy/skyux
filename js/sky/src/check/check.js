@@ -4,30 +4,39 @@
 (function () {
     'use strict';
     angular.module('sky.check', [])
-        .directive('bbCheck', ['$templateCache', function ($templateCache) {
-            function createEl(name) {
-                return angular.element($templateCache.get('sky/templates/check/' + name + '.html'));
+        .directive('bbCheck', ['$templateCache', '$compile', function ($templateCache, $compile) {
+            function createEl(name, scope) {
+                var templateHtml;
+                
+                templateHtml = $templateCache.get('sky/templates/check/' + name + '.html');
+                if (scope) {
+                    templateHtml = $compile(templateHtml)(scope);
+                }
+                return angular.element(templateHtml);
             }
 
             return {
                 link: function (scope, el, attr) {
                     var labelEl = el.parent('label'),
-                        styledEl,
-                        typeClass;
+                        styledEl;
 
                     if (labelEl.length < 1) {
                         el.wrap(createEl('wrapper'));
                     } else {
                         labelEl.addClass('bb-check-wrapper');
-                    }
-                    if (attr.type === 'radio') {
-                        typeClass = 'bb-check-radio';
-                    } else {
-                        typeClass = 'bb-check-checkbox';
-                    }
 
-                    styledEl = createEl('styled');
-                    styledEl.addClass(typeClass);
+                        /*  wrap non-whitespace label text to set
+                            vertical-align middle properly */ 
+                        labelEl.contents()
+                        .filter(function () {
+                            return this.nodeType === 3 && /\S/.test(this.textContent);
+                        })
+                        .wrap(createEl('labeltext'));
+                    }
+                    
+                    
+                    styledEl = createEl(('styled' + attr.type), scope);
+
 
                     el.after(styledEl);
                 }

@@ -43,7 +43,7 @@
         <br />
         <div class="form-group">
           <label class="control-label">
-            <h4>Filter Example</h4>
+            <h4>Filter example</h4>
           </label>
           <br />
           <div>
@@ -58,6 +58,12 @@
           </div>
           <div>
             Abbreviated number value: <strong>{{autoCtrl.numberValue | bbAutonumeric:'number':true}}</strong>
+          </div>
+          <div>
+            No decimals value: <strong>{{autoCtrl.numberValue | bbAutonumeric:{ mDec: 0 } }}</strong>
+          </div>
+          <div>
+            Percent value: <strong>{{autoCtrl.numberValue | bbAutonumeric:'percent'}}</strong>
           </div>
         </div>
       </div>

@@ -1,14 +1,29 @@
 <div ng-controller="TabsetTestController as tabsetTestCtrl">
+  <h3>Tabs example with buttons to add and open tabs</h3>
     <uib-tabset bb-tabset-add="tabsetTestCtrl.addTab()" bb-tabset-open="tabsetTestCtrl.openTab()" bb-tabset-collapsible>
       <uib-tab bb-tab-collapse-header="t.title" ng-repeat="t in tabsetTestCtrl.tabs" class="bb-tab-close">
-          <uib-tab-heading>
-              {{t.title}}
-              <button type="button" class="bb-tab-close-icon" ng-click="tabsetTestCtrl.closeTab($index, $event)"></button>
-          </uib-tab-heading>
-          {{t.content}}
+         <uib-tab-heading>
+           {{t.title}}
+            <button type="button" aria-label="Close tab" class="bb-tab-close-icon" ng-click="tabsetTestCtrl.closeTab($index, $event)"></button>
+         </uib-tab-heading>
+         {{t.content}}
       </uib-tab>
-  </uib-tabset>
+    </uib-tabset>
 </div>
+
+<div ng-controller="TabsetPageController as tabsetPageCtrl">
+  <h3>Tabs example with counter</h3>
+    <uib-tabset bb-tabset-collapsible>
+        <uib-tab bb-tab-collapse-header="p.title" ng-repeat="p in tabsetPageCtrl.pages">
+            <uib-tab-heading>
+                {{p.title}}
+                <span class="bb-tab-header-count">{{p.count}}</span>
+            </uib-tab-heading>
+            {{p.content}}
+        </uib-tab>
+    </uib-tabset>
+</div>
+
 <script type="text/ng-template" id="demo/tabset/checklist.html">
     <bb-modal>
         <bb-modal-header>Select Tabs</bb-modal-header>
@@ -21,8 +36,55 @@
             </bb-checklist>
         </div>
         <bb-modal-footer>
-            <bb-modal-footer-button-primary ng-click="checkCtrl.applyChanges()">Apply Tabs</bb-modal-footer-button-primary>
+            <bb-modal-footer-button-primary ng-click="checkCtrl.applyChanges()">Apply tabs</bb-modal-footer-button-primary>
             <bb-modal-footer-button-cancel></bb-modal-footer-button-cancel>
         </bb-modal-footer>
     </bb-modal>
 </script>
+
+<div ng-controller="VerticalTabsetDemoController as verticalTabsetDemoCtrl">
+  <h3>Vertical tabset</h3>
+    <uib-tabset bb-vertical-tabset>
+      <div bb-vertical-tabset-group bb-vertical-tabset-group-heading="Group 1" bb-vertical-tabset-group-is-open="verticalTabsetDemoCtrl.isOpen">
+        <uib-tab heading="Group 1 - Tab 1">
+          <p>Group 1, tab 1 content</p>
+          <p>Group 1 is open: {{!!verticalTabsetDemoCtrl.isOpen}}</p>
+          <button class="btn btn-primary visible-xs-block" ng-click="verticalTabsetDemoCtrl.showTabs()">
+            <i class="fa fa-chevron-left"></i>&nbsp;Tab list
+          </button>
+        </uib-tab>
+        <uib-tab heading="Group 1 - Tab 2">
+          <p>Group 1, tab 2 content</p>
+          <p>Group 1 is open: {{!!verticalTabsetDemoCtrl.isOpen}}</p>
+          <button class="btn btn-primary visible-xs-block" ng-click="verticalTabsetDemoCtrl.showTabs()">
+            <i class="fa fa-chevron-left"></i>&nbsp;Tab list
+          </button>
+        </uib-tab>
+      </div>
+      <div bb-vertical-tabset-group bb-vertical-tabset-group-heading="Group 2">
+        <uib-tab heading="Group 2 - Tab 1">
+          <p>Group 2, tab 1 content</p>
+          <p>Group 1 is open: {{!!verticalTabsetDemoCtrl.isOpen}}</p>
+          <button class="btn btn-primary visible-xs-block" ng-click="verticalTabsetDemoCtrl.showTabs()">
+            <i class="fa fa-chevron-left"></i>&nbsp;Tab list
+          </button>
+        </uib-tab>
+        <uib-tab heading="Group 2 - Tab 2">
+          <p>Group 2, tab 2 content</p>
+          <p>Group 1 is open: {{!!verticalTabsetDemoCtrl.isOpen}}</p>
+          <button class="btn btn-primary visible-xs-block" ng-click="verticalTabsetDemoCtrl.showTabs()">
+            <i class="fa fa-chevron-left"></i>&nbsp;Tab list
+          </button>
+        </uib-tab>
+      </div>
+      <div bb-vertical-tabset-group bb-vertical-tabset-group-is-disabled="true" bb-vertical-tabset-group-heading="Disabled group">
+        <uib-tab heading="Group 3 - Tab 1">
+          <p>Group 3, tab 1 contents</p>
+          <p>Group 1 is open: {{!!verticalTabsetDemoCtrl.isOpen}}</p>
+          <button class="btn btn-primary visible-xs-block" ng-click="verticalTabsetDemoCtrl.showTabs()">
+            <i class="fa fa-chevron-left"></i>&nbsp;Tab list
+          </button>
+        </uib-tab>
+      </div>
+    </uib-tabset>
+</div>

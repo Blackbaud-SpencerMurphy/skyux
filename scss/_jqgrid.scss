@@ -17,7 +17,7 @@
     //////////////////////////////////////////////////////////////
     thead {
         border: 0;
-        border-bottom: 1px solid $gray-lighter;
+        @include bb-border(dark);
         white-space: nowrap;
         background-color: $bb-color-white;
     }
@@ -36,6 +36,9 @@
     .ui-th-column, .ui-jqgrid-htable th.ui-th-column {
         white-space: nowrap;
         text-align: left;
+        @include bb-field-label();
+        background-color: $bb-color-white;
+        background-clip: padding-box; /* workaround for background-color with borders in cells for firefox */
     }
 
     tr.jqgrow:nth-child(even) {
@@ -53,6 +56,10 @@
         tr.ui-state-highlight {
             background-color: #eeeffb;
             border: 1px solid #dadbf6;
+
+            &:nth-child(2) {
+              border-top: none;
+            }
         }
     }
 
@@ -63,7 +70,7 @@
             border-top: 0;
             border-left: 0;
             border-right: 0;
-            border-bottom: 1px dotted $gray-lighter;
+            @include bb-border(row);
             @include ellipsis(false);
             .bb-check-checkbox.checked:before {
                 padding-left: 0;
@@ -147,7 +154,6 @@
     .ui-jqgrid-htable th.ui-th-column {
         overflow: visible;
         position: relative;
-        font-weight: 600;
     }
 
     .ui-jqgrid-htable th {

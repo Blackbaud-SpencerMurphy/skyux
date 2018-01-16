@@ -19,6 +19,38 @@
         "_description": "The suffix to show after an abbreviated value in the thousands (e.g. $1.2k)",
         "message": "k"
     },
+    "avatar_error_not_image_description": {
+        "_description": "Message description displayed when the user attempts to upload an avatar file that is not a valid image",
+        "message": "Please choose a file that is a valid image."
+    },
+    "avatar_error_not_image_title": {
+        "_description": "Message title displayed when the user attempts to upload an avatar file that is not a valid image",
+        "message": "File is not an image."
+    },
+    "avatar_error_too_large_description": {
+        "_description": "Message description displayed when the user attempts to upload an avatar image with a file size that is too large",
+        "message": "Please choose an image that is less than {0}."
+    },
+    "avatar_error_too_large_title": {
+        "_description": "Message title displayed when the user attempts to upload an avatar image with a file size that is too large",
+        "message": "File is too large."
+    },
+    "card_select": {
+        "_description": "Label for the input in a card that selects the card",
+        "message": "Select card"
+    },
+    "carousel_button_label_next": {
+        "_description": "The accessibility label for the carousel next button",
+        "message": "Go to next item"
+    },
+    "carousel_button_label_previous": {
+        "_description": "The accessibility label for the carousel previous button",
+        "message": "Go to previous item"
+    },
+    "carousel_dot_label": {
+        "_description": "The label for the carousel navigation dots",
+        "message": "Go to item {0}"
+    },
     "checklist_select_all": {
         "_description": "Text for the link in a checklist to select all items.",
         "message": "Select all"
@@ -27,17 +59,49 @@
         "_description": "Text for the link in a checklist to clear selections.",
         "message": "Clear all"
     },
+    "checklist_only_selected_items": {
+        "_description": "Text for the checkbox in a checklist that toggles only showing selected items.",
+        "message": "Only show selected items"
+    },
     "checklist_no_items": {
         "_description": "Text in a checklist when no items are shown based on the current filter.",
         "message": "No items found"
+    },
+    "checklist_check_title": {
+        "_description": "Title for the empty header in the checkbox column for the checklist",
+        "message": "Select item"
+    },
+    "checklist_search_label": {
+        "_description": "Label for the checklist search box",
+        "message": "Search"
+    },
+    "checklist_categories_label": {
+        "_description": "Label for the checklist categories dropdown",
+        "message": "Categories"
+    },
+    "chevron_collapse": {
+        "_description": "Screen reader text for when clicking the chevron would collapse the corresponding section",
+        "message": "Collapse"
+    },
+    "chevron_expand": {
+        "_description": "Screen reader text for when clicking the chevron would expand the corresponding section",
+        "message": "Expand"
+    },
+    "context_menu_default_label": {
+        "_description": "The label on the context menu button used for screen readers when the consumer has not specified a label",
+        "message": "Context menu"
+    },
+    "definition_list_none_found": {
+        "_description": "The default text to show when a definition list item has no value",
+        "message": "None found"
     },
     "grid_back_to_top": {
         "_description": "Text for link in grid to scroll back to the top.",
         "message": "Back to top"
     },
     "grid_column_picker_all_categories": {
-        "_description": "Button text for category filters used to indicate that all columns should be shown in the column picker",
-        "message": "All"
+        "_description": "Text for category filters used to indicate that all columns should be shown in the column picker",
+        "message": "All categories"
     },
     "grid_column_picker_description_header": {
         "_description": "In the column picker, the header for the column showing the description of the columns to include in the grid.",
@@ -98,6 +162,10 @@
     "grid_column_picker_search_no_columns": {
         "_description": "Displays when no columns are found for the specified search text.",
         "message": "No columns found"
+    },
+    "infinite_scroll_load_more": {
+        "_description": "Text for loading more in the infinite scroll button",
+        "message": "Load more"
     },
     "modal_footer_cancel_button": {
         "_description": "Default lable text for modal cancel button",
@@ -180,8 +248,8 @@
         "message": "Expanded view"
     },
     "text_expand_close_text": {
-      "_description": "Text for the close button on the text expand modal",
-      "message": "Close"
+        "_description": "Text for the close button on the text expand modal",
+        "message": "Close"
     },
     "grid_action_bar_clear_selection": {
         "_description": "Clear the selections in the grid.",
@@ -276,8 +344,8 @@
         "message": "Yesterday"
     },
     "date_range_picker_specific_range": {
-      "_description": "text for date range picker",
-      "message": "Specific range"
+        "_description": "text for date range picker",
+        "message": "Specific range"
     },
     "date_range_picker_filter_description_this_week": {
         "_description": "text for date range picker",
@@ -356,24 +424,48 @@
         "message": "{0} for tomorrow"
     },
     "date_range_picker_filter_description_specific_range": {
-      "_description": "text for date range picker",
-      "message": "{0} from {1} to {2}"
+        "_description": "text for date range picker",
+        "message": "{0} from {1} to {2}"
     },
     "date_range_picker_from_date": {
-      "_description": "label for date range picker",
-      "message": "From date"
+        "_description": "label for date range picker",
+        "message": "From date"
     },
     "date_range_picker_to_date": {
-      "_description": "label for date range picker",
-      "message": "To date"
+        "_description": "label for date range picker",
+        "message": "To date"
     },
     "date_range_picker_min_date_error": {
-      "_description": "error message for date range picker",
-      "message": "End date must be after start date"
+        "_description": "error message for date range picker",
+        "message": "End date must be after start date"
     },
     "date_range_picker_max_date_error": {
-      "_description": "error message for date range picker",
-      "message": "Start date must be before end date"
+        "_description": "error message for date range picker",
+        "message": "Start date must be before end date"
+    },
+    "errormodal_ok": {
+        "_description": "Text used on the primary button to dismiss the error modal.",
+        "message": "OK"
+    },
+    "error_description_broken": {
+        "_description": "Text used for the error description to when page is broken.",
+        "message": "Try to refresh this page or come back later."
+    },
+    "error_description_construction": {
+        "_description": "Text used for the error description when page is under construction.",
+        "message": "Thanks for your patience while improvements are made!\nPlease check back in a little while."
+    },
+    "error_title_broken": {
+        "_description": "Text used for the error title when something is broken",
+        "message": "Sorry, something went wrong."
+    },
+    "error_title_construction": {
+        "_description": "Text used for the error title when page is under construction.",
+        "message": "This page will return soon."
+    },
+    "error_title_notfound": {
+        "_description": "Text used for the error title when page is not found.",
+        "message": "Sorry, we can't reach that page."
     },
     "file_size_b_plural": {
         "_description": "",
@@ -394,6 +486,14 @@
     "file_size_gb": {
         "_description": "",
         "message": "{0} GB"
+    },
+    "file_upload_choose" : {
+        "_description": "Text for choosing a file",
+        "message": "Choose file"
+    },
+    "file_upload_drag_or_click" : {
+        "_description": "Label for file drop",
+        "message": "Drag a file here or click to browse"
     },
     "file_upload_drag_file_here": {
         "_description": "",
@@ -423,6 +523,90 @@
         "_description": "",
         "message": "Done"
     },
+    "file_upload_link_input": {
+        "_description": "Label for input to upload file",
+        "message": "Add a link to a file"
+    },
+    "file_upload_no_file": {
+        "_description": "Text indicating there is no file",
+        "message": "No file chosen"
+    },
+    "file_upload_remove": {
+        "_description": "Label for removing the file",
+        "message": "Remove"
+    },
+    "file_upload_replace": {
+        "_description": "Text for replacing the file",
+        "message": "Replace file"
+    },
+    "file_item_delete": {
+        "_description": "Label for button that deletes a file",
+        "message": "Delete file"
+    },
+    "help_button_label": {
+        "description": "Label for the help button",
+        "message": "Open help"
+    },
+    "listbuilder_footer_back_to_top": {
+        "_description": "Text for scrolling back to the top of the listbuilder",
+        "message": "Back to top"
+    },
+    "listbuilder_add_title": {
+        "_description": "Text for the add button title",
+        "message": "Add"
+    },
+    "listbuilder_card_switcher": {
+        "_description": "Text for the card view switcher",
+        "message": "Switch to card view"
+    },
+    "listbuilder_grid_switcher": {
+        "_description": "Text for the grid view switcher",
+        "message": "Switch to grid view"
+    },
+    "listbuilder_repeater_switcher": {
+        "_description": "Text for repeater view switcher",
+        "message": "Switch to repeater view"
+    },
+    "listbuilder_show_only_selected": {
+        "_description": "Text for the checkbox in listbuilder that filters by selected items",
+        "message": "Show only selected"
+    },
+    "listbuilder_multiselect_select_all": {
+        "_description": "Text for the button that selects all items in the listbuilder",
+        "message": "Select all"
+    },
+    "listbuilder_multiselect_clear_all": {
+        "_description": "Text for the button that clears all items in the listbuilder",
+        "message": "Clear all"
+    },
+    "listbuilder_pick_columns": {
+        "_description": "Text for the button that opens a column picker in the listbuilder",
+        "message": "Choose columns"
+    },
+    "listbuilder_show_secondary_actions": {
+        "_description": "Label for the button that opens the secondary actions menu in the listbuilder",
+        "message": "Show secondary actions"
+    },
+    "modal_close": {
+        "_description": "Text for modal close button",
+        "message": "Close modal"
+    },
+    "search_label": {
+        "_description": "Label for search component functionality",
+        "message": "Search items"
+    },
+    "search_open": {
+        "_description": "Label for opening search input",
+        "message": "Open search"
+    },
+    "search_dismiss": {
+        "_description": "Label for dismissing search input",
+        "message": "Dismiss search"
+    },
+    "search_placeholder": {
+        "_description": "Placeholder text for search input component",
+        "message": "Find in this list"
+    },
     "searchfield_searching": {
         "_description": "text for ui-select search control while performing a remote search",
         "message": "Searching..."
@@ -430,6 +614,34 @@
     "searchfield_no_records": {
         "_description": "text for ui-select search control when no records are found.",
         "message": "Sorry, no matching records found"
+    },
+    "selectfield_summary_text": {
+        "_description": "Text displayed when the user has more than 5 items selected",
+        "message": "{0} items selected"
+    },
+    "selectfield_remove": {
+        "_description": "Text for screen readers to convey the meaning of the remove icon button on select field values",
+        "message": "Remove"
+    },
+    "selectfieldpicker_select": {
+        "_description": "Text displayed on the primary dialog button to confirm selection of multiple items",
+        "message": "Select"
+    },
+    "selectfieldpicker_select_value": {
+        "_description": "The default header text for the select field picker directive when the user is allowed to select one value (singular)",
+        "message": "Select value"
+    },
+    "selectfieldpicker_select_values": {
+        "_description": "The default header text for the select field picker directive when the user is allowed to select more than one value (plural)",
+        "message": "Select values"
+    },
+    "selectfieldpicker_clear": {
+      "_description": "Text displayed on the button in single select mode to clear selection and close form",
+      "message": "Clear selection"
+    },
+    "tile_chevron_label": {
+        "_description": "Label for the expand and collapse chevron in tiles",
+        "message": "Expand or collapse"
     },
     "wizard_navigator_finish": {
         "_description": "Text displayed on the next button when a wizard is ready for completion.",
@@ -454,5 +666,70 @@
     "datepicker_close": {
         "_description": "Text displayed in the Close button of the datepicker",
         "message": "Done"
+    },
+    "datepicker_open": {
+        "_description": "Text for the datepicker open button",
+        "message": "Open datepicker"
+    },
+    "reorder_top": {
+      "_description": "Text displayed to indicate that a row can be pushed to the top of the list",
+      "message": "Top"
+    },
+    "tab_add": {
+      "_description": "Screen reader text for the add button on a tabset",
+      "message": "Add tab"
+    },
+    "tab_open": {
+        "_description": "Screen reader text for the open button on a tabset",
+        "message": "Open"
+    },
+    "filter_modal_apply": {
+        "_description": "Text for button to apply filters",
+        "message": "Apply filters"
+    },
+    "filter_modal_clear": {
+        "_description": "Text for button to clear filters",
+        "message": "Clear all filters"
+    },
+    "filter_button_title": {
+        "_description": "Text for the filter button title",
+        "message": "Filters"
+    },
+    "filter_summary_header": {
+        "_description": "Text for the filter summary component",
+        "message": "Filter"
+    },
+    "filter_summary_close": {
+        "_description": "Text for the label for the filter summary close icon",
+        "message": "Close"
+    },
+    "sort_menu_heading": {
+        "_description": "Text for the heading in the sort dropdown",
+        "message": "Sort by"
+    },
+    "sort_button_label": {
+        "_description": "Text for the sort button",
+        "message": "Sort"
+    },
+    "summary_actionbar_open_secondary": {
+        "_description": "Label for the button that shows a secondary menu in the summary actionbar",
+        "message": "Show secondary actions"
+    },
+    "summary_actionbar_show_summary": {
+        "_description": "Label for the button that shows the actionbar summary",
+        "message": "Show summary"
+    },
+    "summary_actionbar_hide_summary": {
+        "_description": "Label for the button that hides the actionbar summary",
+        "message": "Hide summary"
+    },
+    "pagination_previous": {
+        "_description": "Text for the label for the pagination previous link",
+        "message": "Previous"
+    },
+    "pagination_next": {
+        "_description": "Text for the label for the pagination next link",
+        "message": "Next"
     }
+
 }

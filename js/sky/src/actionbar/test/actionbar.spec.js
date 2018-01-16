@@ -27,7 +27,6 @@ describe('Actionbar directive', function () {
             '   </bb-action-bar>',
             '</div>'
         ].join(''));
-
         $compile(el)($scope);
         $scope.$digest();
         expect(el.find('.bb-action-bar').length).toBe(1);
@@ -36,6 +35,7 @@ describe('Actionbar directive', function () {
     it('should convert each action-bar-item to a button, passing along the title and click', function () {
         var element,
             source = '',
+            emptyButtonEl,
             items = [
                 {
                     clicked: false,
@@ -59,6 +59,8 @@ describe('Actionbar directive', function () {
             ].join('');
         });
 
+        source += '<bb-action-bar-item bb-action-bar-item-label="Hidden"></bb-action-bar-item';
+
         element = angular.element('<bb-action-bar>' + source + '</bb-action-bar>');
         $compile(element)($scope);
         $scope.$digest();
@@ -71,8 +73,11 @@ describe('Actionbar directive', function () {
             btn.click();
             expect(arr[index].clicked).toBe(true);
         });
-    });
 
+        emptyButtonEl = element.find('button[aria-label="Hidden"]');
+        expect(emptyButtonEl.length).toBe(1);
+
+    });
 
     describe('action bar item group', function () {
 
@@ -111,6 +116,10 @@ describe('Actionbar directive', function () {
                         title: 'Second Item'
                     }
                 ],
+                toggleEl,
+                dropdownEl,
+                ariaControls,
+                dropdownId,
                 callbacks = [];
 
             spyOn(bbMediaBreakpoints, 'register').and.callFake(function (actionBarCallback) {
@@ -144,6 +153,15 @@ describe('Actionbar directive', function () {
             items.forEach(function (el, index, arr) {
                 validateDropdown(el, index, arr, element);
             });
+
+            toggleEl = element.find('.bb-btn-secondary.dropdown-toggle');
+            ariaControls = toggleEl.attr('aria-controls');
+            dropdownEl = element.find('ul.dropdown-menu');
+            dropdownId = dropdownEl.attr('id');
+
+            
+            expect(dropdownId).toEqual(ariaControls);
+
         });
 
         it('should be able to handle interpolated values in the dropdown', function () {

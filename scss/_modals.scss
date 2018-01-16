@@ -4,6 +4,9 @@
 
 .modal-header {
     min-height: 45px;
+    background: $form-background;
+    display: flex;
+    align-items: center;
 
     .bb-dialog-header {
         white-space: nowrap;
@@ -14,31 +17,28 @@
         width: 80%;
         float: left;
         line-height: 1.4; /* Keeps font descenders from being cut off */
-        font-family: $font-family-base;
-        font-weight: 600;
-        font-size: 14px;
+        @include bb-emphasized();
         margin: 0;
     }
 
     .bb-helpbutton {
-        float: right;
-        margin-right: 20px;
-        margin-top: 2px !important;
         font-size: 16px;
+        margin-right: 20px;
+        margin-left: auto;
     }
 
     .close {
-        margin-top: 3px;
+        margin-left: auto;
     }
+
+    .bb-helpbutton+.close {
+        margin-left: 0;
+    }
+
 }
 
 .modal-body {
     padding: 15px;
-
-    input[type=email] {
-        border: 1px solid #ccc;
-        -webkit-appearance: none;
-    }
 }
 
 .modal-body-tiled,
@@ -55,10 +55,11 @@
     margin: 0;
     text-align: left;
     background: $form-background;
+    @include bb-border(light, top);
+    
     .btn+.btn {
         margin-left: 10px;
     }
-
 }
 
 .bb-modal {
@@ -66,6 +67,95 @@
 
     .modal-body {
         overflow-y: auto;
+    }
+}
+
+.bb-modal-fullpage {
+    opacity: 0;
+    transition: opacity $bb-transition-time-short;
+
+    &.modal.in {
+        opacity: 1;
+        @include transform(none);
+
+        .modal-dialog {
+            @include transform(none);
+        }
+    }
+
+    &.modal {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .modal-dialog {
+        margin: 0;
+        width: 100%;
+    }
+
+    .modal-content {
+        border: none;
+        box-shadow: none;
+        -webkit-box-shadow: none;
+    }
+
+    .modal-dialog,
+    .modal-content {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+    .modal-header,
+    .modal-footer {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        z-index: 10000;
+    }
+
+    .modal-header {
+        top: 0;
+
+        .bb-dialog-header {
+            @include bb-section-heading;
+        }
+
+        .close,
+        .bb-helpbutton {
+            font-size: 20px;
+            margin-top: 6px;
+        }
+    }
+
+    .modal-footer {
+        bottom: 0;
+    }
+
+    .modal-body {
+        overflow: visible;
+        top: 0;
+        bottom: 0;
+    }
+}
+
+.bb-modal-fullpage+.bb-modal-fullpage {
+    display: none !important; /* important is necessary here because an inline style of display: block; is applied to this element. */
+}
+
+.bb-modal-open-fullpage {
+    &.modal-open {
+        overflow: auto;
+
+        .modal {
+            overflow: visible;
+        }
+        bb-page {
+            display: none;
+        }
     }
 }
 
@@ -131,5 +221,12 @@
         content: "*";
         color: $bb-error-color;
         padding-left: 5px;
+    }
+}
+
+.bb-modal-fullpage-backdrop {
+    background-color: $bb-color-white;
+    &.in {
+        opacity: 1;
     }
 }

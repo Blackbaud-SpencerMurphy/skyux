@@ -1,29 +1,32 @@
-<div id="screenshot-navbar" ng-controller="NavbarTestController">
-    <bb-navbar>
-        <div class="container-fluid">
-            <ul class="nav navbar-nav navbar-left">
+<div id="screenshot-navbar-dropdown" ng-controller="NavbarTestController">
+    <div id="screenshot-navbar">
+      <bb-navbar class="bb-navbar-showmobile">
+          <div class="container-fluid">
+              <ul class="nav navbar-nav navbar-left">
                 <li class="bb-navbar-active"><a href="">Selected Item</a></li>
                 <li class="dropdown">
                     <a href="" class="dropdown-toggle" role="button">Child Items <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
 
-                        <li>
+                        <li role="menuitem">
                             <a href="">Child Item 1</a>
                         </li>
 
-                        <li>
+                        <li class="bb-navbar-active" role="menuitem">
                             <a href="">Child Item 2</a>
                         </li>
 
-                        <li>
+                        <li role="menuitem">
                             <a href="">Child Item 3</a>
                         </li>
                     </ul>
                 </li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
+              </ul>
+              <ul class="nav navbar-nav navbar-right">
                 <li><a href="">Right Item</a></li>
-            </ul>
+              </ul>
+            </div>
+          </bb-navbar>
         </div>
-    </bb-navbar>
+      <div style="height: 300px;"></div>
 </div>

@@ -1,28 +1,50 @@
-/*global describe, it, browser, beforeEach, expect, require */
+/*global describe, it, browser */
 
 describe('file attachments', function () {
     'use strict';
 
-    var options = {};
+    it('should match the baseline fileattachment screenshot', function () {
+        return browser
+            .setupTest('/fileattachments/fixtures/test.full.html')
+            .compareScreenshot({
+                screenshotName: 'fileattachments',
+                selector: '#screenshot-fileattachments',
+                checkAccessibility: true
+            });
 
-    beforeEach(function (done) {
-        require('../common').initWebdriverCss(browser, options, done);
     });
 
+    it('should match the single fileattachment screenshot', function () {
+        return browser
+            .setupTest('/fileattachments/fixtures/test.full.html')
+            .compareScreenshot({
+                screenshotName: 'fileattachments_single',
+                selector: '#screenshot-file-single',
+                checkAccessibility: true
+            });
 
-    it('should take fileattachment screenshots', function (done) {
-        var screenshotName = 'fileattachments',
-            pageName = options.prefix + screenshotName + '_full';
-        browser
-            .url('/fileattachments/fixtures/test.full.html')
-            .webdrivercss(pageName, [
-                {
-                    name: screenshotName,
-                    elem: '#screenshot-fileattachments'
-                }
-            ], function (err, res) {
-                expect(err).toBe(undefined);
-                expect(res[screenshotName][0].isWithinMisMatchTolerance).toBe(true);
-            }).call(done);
+    });
+
+    it('should match the single fileattachment screenshot with no item', function () {
+        return browser
+            .setupTest('/fileattachments/fixtures/test.full.html')
+            .click('#screenshot-file-single .bb-file-single-remove')
+            .compareScreenshot({
+                screenshotName: 'fileattachments_single_noitem',
+                selector: '#screenshot-file-single',
+                checkAccessibility: true
+            });
+
+    });
+
+    it('should match the single fileattachment screenshot with long name', function () {
+        return browser
+            .setupTest('/fileattachments/fixtures/test.full.html')
+            .compareScreenshot({
+                screenshotName: 'fileattachments_single_longname',
+                selector: '#screenshot-file-single-long-name',
+                checkAccessibility: true
+            });
+
     });
 });

@@ -1,5 +1,5 @@
 .bb-text-block {
-    font-size: $bb-font-size-lg;
+    font-size: $font-size-base;
     line-height: 1.6em;
 }
 
@@ -13,3 +13,68 @@ Bootstrap colors for alert text, panel text and others.
 @include text-emphasis-variant('.text-info', $bb-text-color-info);
 
 @include text-emphasis-variant('.text-warning', $bb-text-color-warning);
+
+/*
+Semantic font class styles are based on existing styling of analogous components. We will be testing out a new typographic scheme, and will update these values once that is finalized. The proposed scheme will have 15px base font, so the body- classes and field labels will change the most. It's possible that the current larger fonts will not change.
+*/
+.bb-page-heading {
+    @include bb-page-heading();
+}
+
+.bb-section-heading {
+    @include bb-section-heading();
+}
+
+.bb-subsection-heading {
+    @include bb-subsection-heading();
+}
+
+.bb-headline {
+    @include bb-headline();
+}
+
+.bb-emphasized {
+    @include bb-emphasized();
+}
+
+.bb-deemphasized {
+    @include bb-deemphasized();
+}
+
+.bb-field-label {
+    @include bb-field-label();
+}
+
+// Status text
+.text-success {
+    color: $sky-text-color-default;
+}
+
+.text-success::before {
+    content: "\f00c";
+	font-family: FontAwesome;
+	margin-right: 5px;
+	color: $sky-highlight-color-success;
+}
+
+.text-warning {
+    color: $sky-text-color-default;
+}
+
+.text-warning::before {
+    content: "\f071";
+	font-family: FontAwesome;
+	margin-right: 5px;
+	color: $sky-highlight-color-warning;
+}
+
+.text-danger {
+    color: $sky-text-color-default;
+}
+
+.text-danger::before {
+    content: "\f071";
+	font-family: FontAwesome;
+	margin-right: 5px;
+	color: $sky-highlight-color-danger;
+}

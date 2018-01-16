@@ -3,14 +3,14 @@
       <bb-date-range-picker bb-date-range-picker-value="dateRangeCtrl.dateRangePickerValue"
                             bb-date-range-picker-options="dateRangeCtrl.dateRangePickerOptions"
                             bb-date-range-picker-automation-id="'DirectiveDemo'"
-                            bb-date-range-picker-label="'Date range picker'"
+                            bb-date-range-picker-label="'Date-range picker'"
                             ></bb-date-range-picker>
 
       Selected dateRangeType: <strong>'{{dateRangeCtrl.dateRangePickerValue.dateRangeType}}'</strong>
       <br />
-      Caption: <strong>'{{dateRangeCtrl.bbDateRangePicker.getDateRangeTypeCaption(dateRangeCtrl.dateRangePickerValue)}}'</strong>
+      Caption: <strong>'{{dateRangeCtrl.bbDateRangePicker.getDateRangeTypeCaption(dateRangeCtrl.dateRangePickerValue.dateRangeType)}}'</strong>
       <br />
-      Description: <strong>'{{dateRangeCtrl.bbDateRangePicker.getDateRangeFilterDescription(dateRangeCtrl.dateRangePickerValue)}}'</strong>
+      Description: <strong>'{{dateRangeCtrl.bbDateRangePicker.getDateRangeFilterDescription(dateRangeCtrl.dateRangePickerValue.dateRangeType)}}'</strong>
 
       <br />
       <br />
@@ -23,22 +23,22 @@
       </label>
 
   </div>
-  <h3>Date-range Picker with Option to Select Specific Dates</h3>
+  <h3>Date-range picker with option to select specific dates</h3>
   <div ng-controller="SpecificDateRangePickerDemoController as specificRangeCtrl" class="form-group">
       <bb-date-range-picker bb-date-range-picker-value="specificRangeCtrl.dateRangePickerValue"
                               bb-date-range-picker-options="specificRangeCtrl.dateRangePickerOptions"
                               bb-date-range-picker-automation-id="'DirectiveDemo'"
                               bb-date-range-picker-from-date="specificRangeCtrl.fromDate"
                               bb-date-range-picker-to-date="specificRangeCtrl.toDate"
-                              bb-date-range-picker-label="'Date range picker'"
+                              bb-date-range-picker-label="'Date-range picker'"
                               bb-date-range-picker-valid="specificRangeCtrl.isValid"
                               ></bb-date-range-picker>
 
       Selected dateRangeType: <strong>'{{specificRangeCtrl.dateRangePickerValue.dateRangeType}}'</strong>
       <br />
-      Caption: <strong>'{{specificRangeCtrl.bbDateRangePicker.getDateRangeTypeCaption(specificRangeCtrl.dateRangePickerValue)}}'</strong>
+      Caption: <strong>'{{specificRangeCtrl.bbDateRangePicker.getDateRangeTypeCaption(specificRangeCtrl.dateRangePickerValue.dateRangeType)}}'</strong>
       <br />
-      Description: <strong>'{{specificRangeCtrl.bbDateRangePicker.getDateRangeFilterDescription(specificRangeCtrl.dateRangePickerValue)}}'</strong>
+      Description: <strong>'{{specificRangeCtrl.bbDateRangePicker.getDateRangeFilterDescription(specificRangeCtrl.dateRangePickerValue.dateRangeType)}}'</strong>
 
       <br />
       From date: <strong>{{specificRangeCtrl.fromDate | date: 'MM/dd/yyyy'}}</strong>
@@ -46,6 +46,27 @@
       To date: <strong>{{specificRangeCtrl.toDate | date: 'MM/dd/yyyy'}}</strong>
       <br />
       Date range: <strong><span ng-hide="specificRangeCtrl.isValid">not</span> valid</strong>
+
+      <br />
+
+  </div>
+
+  <h3>Date-range picker with custom options</h3>
+  <div ng-controller="CustomDateRangePickerDemoController as customRangeCtrl" class="form-group">
+      <bb-date-range-picker bb-date-range-picker-value="customRangeCtrl.dateRangePickerValue"
+                              bb-date-range-picker-options="customRangeCtrl.dateRangePickerOptions"
+                              bb-date-range-picker-automation-id="'DirectiveDemo'"
+                              bb-date-range-picker-from-date="customRangeCtrl.fromDate"
+                              bb-date-range-picker-to-date="customRangeCtrl.toDate"
+                              bb-date-range-picker-label="'Date-range picker'"
+                              bb-date-range-picker-valid="customRangeCtrl.isValid"
+                              ></bb-date-range-picker>
+
+      Selected dateRangeType: <strong>'{{customRangeCtrl.dateRangePickerValue.dateRangeType}}'</strong>
+      <br />
+      Caption: <strong>'{{customRangeCtrl.bbDateRangePicker.getDateRangeTypeCaption(customRangeCtrl.dateRangePickerValue.dateRangeType, customRangeCtrl.dateRangePickerOptions.getDateRangeTypeInfo)}}'</strong>
+      <br />
+      Description: <strong>'{{customRangeCtrl.bbDateRangePicker.getDateRangeFilterDescription(customRangeCtrl.dateRangePickerValue.dateRangeType, customRangeCtrl.dateRangePickerOptions.getDateRangeTypeInfo)}}'</strong>
 
       <br />
 

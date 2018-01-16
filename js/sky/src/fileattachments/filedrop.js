@@ -26,20 +26,28 @@
                                 url: scope.bbFileDrop.url
                             }
                         });
-                        
+
                         scope.bbFileDrop.url = null;
                     },
-                    fileChange: function ($files, $event, $rejectedFiles) {
-                        scope.bbFileDropChange({
-                            files: $files,
-                            rejectedFiles: $rejectedFiles
+                    fileChange: function ($files, $event, $invalidFiles) {
+                        if ($files.length > 0 || $invalidFiles.length > 0) {
+                            scope.bbFileDropChange({
+                                files: $files,
+                                rejectedFiles: $invalidFiles
+                            });
+                        } 
+                    },
+                    validate: function ($file) {
+                        return scope.bbFileDropValidateFn({
+                            file: $file
                         });
                     }
                 };
             },
             scope: {
                 bbFileDropChange: '&',
-                bbFileDropLinkChange: '&'
+                bbFileDropLinkChange: '&',
+                bbFileDropValidateFn: '&'
             },
             template: function (el, attrs) {
                 var dropEl;
@@ -50,7 +58,7 @@
 
                 dropEl.attr({
                     'ngf-allow-dir': attrs.bbFileDropAllowDir,
-                    'ngf-accept': attrs.bbFileDropAccept,
+                    'ngf-pattern': attrs.bbFileDropAccept,
                     'ngf-multiple': attrs.bbFileDropMultiple || 'true',
                     'ngf-min-size': attrs.bbFileDropMinSize || '0',
                     'ngf-max-size': attrs.bbFileDropMaxSize || '500000'

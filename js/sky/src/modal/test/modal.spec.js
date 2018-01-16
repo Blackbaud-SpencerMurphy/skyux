@@ -29,8 +29,7 @@ describe('Modal', function () {
         'sky.helpbutton',
         'sky.modal',
         'sky.templates',
-        'template/modal/backdrop.html',
-        'template/modal/window.html'
+        'uib/template/modal/window.html'
     ));
 
     beforeEach(module(function ($compileProvider) {
@@ -49,7 +48,7 @@ describe('Modal', function () {
         });
     }));
 
-    beforeEach(inject(function (_$animate_, _$compile_, _$document_, _$modal_, _$rootScope_, _$templateCache_, _$timeout_, _$window_, _bbModal_, _bbResources_) {
+    beforeEach(inject(function (_$animate_, _$compile_, _$document_, _$rootScope_, _$templateCache_, _$timeout_, _$window_, _bbModal_, _bbResources_) {
         $animate = _$animate_;
         $compile = _$compile_;
         $document = _$document_;
@@ -64,6 +63,11 @@ describe('Modal', function () {
     afterEach(function () {
         $('.modal-backdrop').remove();
     });
+
+    function afterModalOpened() {
+        $animate.flush();
+        $rootScope.$digest();
+    }
 
     describe('directive', function () {
         function getPixelValue(val) {
@@ -91,7 +95,7 @@ describe('Modal', function () {
                 templateUrl: 'test/modal/modal.html'
             });
 
-            $rootScope.$digest();
+            afterModalOpened();
 
             expect($('.modal-dialog .test-modal-template-url')).toBeInDOM();
 
@@ -114,7 +118,7 @@ describe('Modal', function () {
             });
             /*jlint white: false */
 
-            $rootScope.$digest();
+            afterModalOpened();
 
             expect($('.modal-dialog .test-modal-template')).toBeInDOM();
 
@@ -139,7 +143,7 @@ describe('Modal', function () {
             });
             /*jlint white: false */
 
-            $rootScope.$digest();
+            afterModalOpened();
 
             modalEl = $('.bb-modal .modal-dialog');
 
@@ -183,7 +187,7 @@ describe('Modal', function () {
                 template: '<bb-modal><div bb-modal-body></div></bb-modal>'
             });
 
-            $rootScope.$digest();
+            afterModalOpened();
 
             expect(getResizeListenerCount()).toBe(resizeListenerCount + 1);
 
@@ -198,6 +202,94 @@ describe('Modal', function () {
 
             // Ensure the window resize listener is removed when the modal is closed.
             expect(getResizeListenerCount()).toBe(resizeListenerCount);
+        });
+
+        it('should be displayed full-page when that option is specified', function () {
+            var modalInstance;
+
+            modalInstance = bbModal.open(
+                {
+                    template: '<bb-modal><bb-modal-header>Heyo</bb-modal-header><div bb-modal-body></div><bb-modal-footer></bb-modal-footer></bb-modal>'
+                },
+                {
+                    fullPage: true
+                }
+            );
+
+            afterModalOpened();
+
+            $(window).resize();
+            $timeout.flush();
+
+            expect($('.modal-content').outerHeight()).toBe($(document).height());
+            expect($('.modal-content').outerWidth()).toBe($(document).width());
+
+            $(window).resize();
+            $timeout.flush();
+
+            expect($('.modal-content').outerHeight()).toBe($(document).height());
+            expect($('.modal-content').outerWidth()).toBe($(document).width());
+
+            closeModalInstance(modalInstance);
+        });
+
+        it('should add a class to the body element when a full-page modal is opened', function () {
+            var bodyEl = $(document.body),
+                modalInstance;
+
+            modalInstance = bbModal.open(
+                {
+                    template: '<bb-modal><div bb-modal-body></div></bb-modal>'
+                },
+                {
+                    fullPage: true
+                }
+            );
+
+            afterModalOpened();
+
+            expect(bodyEl).toHaveClass('bb-modal-open-fullpage');
+
+            closeModalInstance(modalInstance);
+
+            expect(bodyEl).not.toHaveClass('bb-modal-open-fullpage');
+        });
+
+        it('should remove the full-page modal class from the body when the last full-page modal is closed', function () {
+            var bodyEl = $(document.body),
+                modalInstance1,
+                modalInstance2;
+
+            modalInstance1 = bbModal.open(
+                {
+                    template: '<bb-modal><div bb-modal-body></div></bb-modal>'
+                },
+                {
+                    fullPage: true
+                });
+
+            afterModalOpened();
+
+            modalInstance2 = bbModal.open(
+                {
+                    template: '<bb-modal><div bb-modal-body></div></bb-modal>'
+                },
+                {
+                    fullPage: true
+                }
+            );
+
+            afterModalOpened();
+
+            expect(bodyEl).toHaveClass('bb-modal-open-fullpage');
+
+            closeModalInstance(modalInstance2);
+
+            expect(bodyEl).toHaveClass('bb-modal-open-fullpage');
+
+            closeModalInstance(modalInstance1);
+
+            expect(bodyEl).not.toHaveClass('bb-modal-open-fullpage');
         });
     });
 
@@ -326,6 +418,38 @@ describe('Modal', function () {
             el.remove();
         });
 
+        it('should dismiss with close when enter is pressed on x on modal header', function () {
+            var dismissArgs,
+                $scope = $rootScope.$new(),
+                e,
+                el;
+
+            /*jslint white: true */
+            el = $compile(
+                '<bb-modal>' +
+                    '<bb-modal-header bb-modal-help-key="helpKey"></bb-modal-header>' +
+                '</bb-modal>'
+            )($scope);
+
+            $scope.$digest();
+
+            $scope.$dismiss = function (args) {
+                dismissArgs = args;
+            };
+
+            e = $.Event('keyup');
+            e.which = 13;
+            e.keyCode = 13;
+
+            el.find('.fa.fa-times.close').trigger(e);
+
+            $scope.$digest();
+
+            expect(dismissArgs).toBe('close');
+
+            el.remove();
+        });
+
     });
 
     describe('footer', function () {
@@ -371,7 +495,7 @@ describe('Modal', function () {
                 btnEl = el.find('button.btn.bb-btn-secondary');
 
                 expect(btnEl).toHaveAttr('type', 'button');
-                expect(btnEl.find('span')).toHaveText('Test button');
+                expect(btnEl).toHaveText('Test button');
 
                 el.remove();
             });
@@ -424,7 +548,7 @@ describe('Modal', function () {
                 btnEl = el.find('button.btn.btn-primary');
 
                 expect(btnEl).toHaveAttr('type', 'submit');
-                expect(btnEl.find('span')).toHaveText($scope.primaryButtonText);
+                expect(btnEl).toHaveText($scope.primaryButtonText);
 
                 el.remove();
             });
@@ -477,7 +601,7 @@ describe('Modal', function () {
                 btnEl = el.find('button.btn.btn-link');
 
                 expect(btnEl).toHaveAttr('type', 'button');
-                expect(btnEl.find('span')).toHaveText($scope.cancelButtonText);
+                expect(btnEl).toHaveText($scope.cancelButtonText);
 
                 el.remove();
             });
@@ -535,14 +659,15 @@ describe('Modal service', function () {
 
         $rootScope.$digest();
 
-        expect(openSpy).toHaveBeenCalledWith({
+        expect(openSpy).toHaveBeenCalledWith(jasmine.objectContaining({
             template: 'a',
-            backdrop: 'static',
-            windowClass: 'bb-modal'
-        });
+            backdrop: 'static'
+        }));
+
+        // The second-half of the windowClass value varies for each modal, so just check
+        // that at least the bb-modal class is present.
+        expect(openSpy.calls.argsFor(0)[0].windowClass.indexOf('bb-modal ')).toBe(0);
     });
-
-
 
     describe('on mobile browsers', function () {
         it('should be styled differently to avoid some quirks with fixed position elements', function () {

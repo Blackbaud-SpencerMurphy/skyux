@@ -1,35 +1,37 @@
 
-/*global describe, it, browser, beforeEach, expect, require */
+/*global describe, it, browser */
 
 describe('Page summary', function () {
     'use strict';
 
-    var options = {};
-
-    beforeEach(function (done) {
-        require('../common').initWebdriverCss(browser, options, done);
-    });
-
-    function clickTest(screenshotName, visibleComponents, done) {
-        var pageName = options.prefix + 'pagesummary_' + screenshotName;
-
-        browser
-            .url('/pagesummary/fixtures/test.full.html')
+    function clickTest(screenshotName, visibleComponents, screenWidth) {
+        return browser
+            .setupTest('/pagesummary/fixtures/test.full.html', screenWidth)
             .setValue('#screenshots-pagesummary-items', visibleComponents.join(','))
-            .webdrivercss(pageName, [
-                {
-                    name: screenshotName,
-                    elem: ('#screenshots-pagesummary')
-                }
-            ], function (err, res) {
-                expect(err).toBe(undefined);
-                expect(res[screenshotName][0].isWithinMisMatchTolerance).toBe(true);
-            })
-            .call(done);
+            .compareScreenshot({
+                screenshotName: ('pagesummary_' + screenshotName),
+                selector: '#screenshots-pagesummary',
+                checkAccessibility: true
+            });
     }
 
-    it('should match previous screenshot when all components are present', function (done) {
-        clickTest(
+    it('should match previous pagesummary screenshot when all components are present', function () {
+        return clickTest(
+            'all',
+            [
+                'Title',
+                'Subtitle',
+                'Image',
+                'Status',
+                'KeyInfo',
+                'Content',
+                'Alert'
+            ]
+        );
+    });
+
+    it('should match previous pagesummary screenshot when all components are present on small screens', function () {
+        return clickTest(
             'all',
             [
                 'Title',
@@ -40,12 +42,12 @@ describe('Page summary', function () {
                 'Content',
                 'Alert'
             ],
-            done
+            480
         );
     });
 
-    it('should match previous screenshot when no image is present', function (done) {
-        clickTest(
+    it('should match previous pagesummary screenshot when no image is present', function () {
+        return clickTest(
             'noimage',
             [
                 'Title',
@@ -54,13 +56,12 @@ describe('Page summary', function () {
                 'KeyInfo',
                 'Content',
                 'Alert'
-            ],
-            done
+            ]
         );
     });
 
-    it('should match previous screenshot when no subtitle is present', function (done) {
-        clickTest(
+    it('should match previous pagesummary screenshot when no subtitle is present', function () {
+        return clickTest(
             'nosubtitle',
             [
                 'Title',
@@ -69,13 +70,12 @@ describe('Page summary', function () {
                 'KeyInfo',
                 'Content',
                 'Alert'
-            ],
-            done
+            ]
         );
     });
 
-    it('should match previous screenshot when no status is present', function (done) {
-        clickTest(
+    it('should match previous pagesummary screenshot when no status is present', function () {
+        return clickTest(
             'nostatus',
             [
                 'Title',
@@ -84,13 +84,12 @@ describe('Page summary', function () {
                 'KeyInfo',
                 'Content',
                 'Alert'
-            ],
-            done
+            ]
         );
     });
 
-    it('should match previous screenshot when no key info is present', function (done) {
-        clickTest(
+    it('should match previous pagesummary screenshot when no key info is present', function () {
+        return clickTest(
             'nokeyinfo',
             [
                 'Title',
@@ -99,13 +98,12 @@ describe('Page summary', function () {
                 'Status',
                 'Content',
                 'Alert'
-            ],
-            done
+            ]
         );
     });
 
-    it('should match previous screenshot when no additional content is present', function (done) {
-        clickTest(
+    it('should match previous pagesummary screenshot when no additional content is present', function () {
+        return clickTest(
             'nocontent',
             [
                 'Title',
@@ -114,13 +112,12 @@ describe('Page summary', function () {
                 'Status',
                 'KeyInfo',
                 'Alert'
-            ],
-            done
+            ]
         );
     });
 
-    it('should match previous screenshot when no alert is present', function (done) {
-        clickTest(
+    it('should match previous pagesummary screenshot when no alert is present', function () {
+        return clickTest(
             'noalert',
             [
                 'Title',
@@ -129,8 +126,31 @@ describe('Page summary', function () {
                 'Status',
                 'KeyInfo',
                 'Content'
-            ],
-            done
+            ]
         );
     });
+
+    it('should match previous pagesummary screenshot when only image, title, and subtitle are present', function () {
+        return clickTest(
+            'image_title_subtitle',
+            [
+                'Title',
+                'Subtitle',
+                'Image'
+            ]
+        );
+    });
+
+    it('should match previous pagesummary screenshot when only image, title, and subtitle are present on small screens', function () {
+        return clickTest(
+            'image_title_subtitle',
+            [
+                'Title',
+                'Subtitle',
+                'Image'
+            ],
+            480
+        );
+    });
+
 });

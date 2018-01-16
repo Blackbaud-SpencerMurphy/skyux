@@ -8,36 +8,44 @@ describe('Tabset module', function () {
         $document,
         dynamicTabsHtml,
         $scope,
-        bbMediaBreakpoints;
+        bbMediaBreakpoints,
+        $timeout,
+        bbResources,
+        $log,
+        $templateCache;
 
     beforeEach(module(
         'ngMock',
         'sky.tabset',
         'sky.templates',
-        'template/tabs/tabset.html',
-        'template/tabs/tab.html'
+        'uib/template/tabs/tabset.html',
+        'uib/template/tabs/tab.html'
     ));
 
-    beforeEach(inject(function (_$compile_, _$rootScope_, _$document_, _bbMediaBreakpoints_) {
+    beforeEach(inject(function (_$compile_, _$rootScope_, _$document_, _bbMediaBreakpoints_, _$timeout_, _bbResources_, _$log_, _$templateCache_) {
         $compile = _$compile_;
         $scope = _$rootScope_.$new();
         $document = _$document_;
         bbMediaBreakpoints = _bbMediaBreakpoints_;
+        $timeout = _$timeout_;
+        bbResources = _bbResources_;
+        $log = _$log_;
+        $templateCache = _$templateCache_;
 
-        dynamicTabsHtml = '<tabset bb-tabset-add="addTab()" bb-tabset-open="openTab()">' +
-                '<tab>' +
-                    '<tab-heading>' +
+        dynamicTabsHtml = '<uib-tabset bb-tabset-add="addTab()" bb-tabset-open="openTab()">' +
+                '<uib-tab>' +
+                    '<uib-tab-heading>' +
                         'Tab 1' +
-                    '</tab-heading>' +
+                    '</uib-tab-heading>' +
                     'Yo' +
-                '</tab>' +
-                '<tab>' +
-                    '<tab-heading>' +
+                '</uib-tab>' +
+                '<uib-tab>' +
+                    '<uib-tab-heading>' +
                         'Tab 2' +
-                    '</tab-heading>' +
+                    '</uib-tab-heading>' +
                     'Hey' +
-                '</tab>' +
-            '</tabset>';
+                '</uib-tab>' +
+            '</uib-tabset>';
     }));
 
     function getLargeScreenAddButton(el) {
@@ -47,6 +55,151 @@ describe('Tabset module', function () {
     function getLargeScreenOpenButton(el) {
         return el.find('li.bb-tab-button button.bb-tab-button-wrap.bb-tab-button-open');
     }
+
+    function getTabs(el) {
+        return el.find('ul.nav-tabs > li');
+    }
+
+    describe('tabs with active attribute', function () {
+        var tabsHtml,
+            el;
+        beforeEach(function () {
+            tabsHtml = '<uib-tabset>' +
+            '<uib-tab heading="t.title" ng-repeat="t in myTabs" active="t.active">' +
+                '{{t.content}}' +
+            '</uib-tab>' +
+            '</uib-tabset>';
+
+            $scope.myTabs = [
+                {
+                    title: 'Tab 1',
+                    content: '1 content',
+                    active: true
+                },
+                {
+                    title: 'Tab 2',
+                    content: '2 content'
+                },
+                {
+                    title: 'Tab 3',
+                    content: '3 content'
+                }
+            ];
+        });
+
+        it('should change the tab when tab active is set to true', function () {
+            var tabsEl;
+
+
+            el = $compile(tabsHtml)($scope);
+
+            $scope.$digest();
+            $timeout.flush();
+
+            $scope.myTabs[1].active = true;
+            $scope.$digest();
+
+            expect($scope.myTabs[0].active).not.toBe(true);
+            expect($scope.myTabs[1].active).toBe(true);
+            expect($scope.myTabs[2].active).not.toBe(true);
+
+            tabsEl = getTabs(el);
+
+            expect(tabsEl.eq(0)).not.toHaveClass('active');
+            expect(tabsEl.eq(1)).toHaveClass('active');
+            expect(tabsEl.eq(2)).not.toHaveClass('active');
+        });
+
+        it('should change the active when the tab is clicked manually', function () {
+            var tabsEl;
+
+            el = $compile(tabsHtml)($scope);
+            $scope.$digest();
+            $timeout.flush();
+
+            tabsEl = getTabs(el);
+
+            tabsEl.eq(1).find('a').click();
+            $scope.$digest();
+
+            expect($scope.myTabs[0].active).not.toBe(true);
+            expect($scope.myTabs[1].active).toBe(true);
+            expect($scope.myTabs[2].active).not.toBe(true);
+
+            tabsEl = getTabs(el);
+
+            expect(tabsEl.eq(0)).not.toHaveClass('active');
+            expect(tabsEl.eq(1)).toHaveClass('active');
+            expect(tabsEl.eq(2)).not.toHaveClass('active');
+        });
+
+        it('should initialize the tabs properly when active is set to true', function () {
+            var tabsEl;
+
+            $scope.myTabs[0].active = false;
+            $scope.myTabs[1].active = true;
+
+            el = $compile(tabsHtml)($scope);
+            $scope.$digest();
+            $timeout.flush();
+
+            expect($scope.myTabs[0].active).not.toBe(true);
+            expect($scope.myTabs[1].active).toBe(true);
+            expect($scope.myTabs[2].active).not.toBe(true);
+
+            tabsEl = getTabs(el);
+
+            expect(tabsEl.eq(0)).not.toHaveClass('active');
+            expect(tabsEl.eq(1)).toHaveClass('active');
+            expect(tabsEl.eq(2)).not.toHaveClass('active');
+
+            $scope.myTabs[0].active = true;
+
+            $scope.$digest();
+
+            expect($scope.myTabs[0].active).toBe(true);
+            expect($scope.myTabs[1].active).not.toBe(true);
+            expect($scope.myTabs[2].active).not.toBe(true);
+
+            tabsEl = getTabs(el);
+
+            expect(tabsEl.eq(0)).toHaveClass('active');
+            expect(tabsEl.eq(1)).not.toHaveClass('active');
+            expect(tabsEl.eq(2)).not.toHaveClass('active');
+        });
+    });
+
+    describe('Xs tab heading', function () {
+        it('should add a tab heading that is visible at xs breakpoints', function () {
+            var el,
+                largeHeadingEl,
+                smallHeadingEl,
+                tabHtml = '<uib-tabset>' +
+                            '<uib-tab heading="{{locals.heading_lg}}" bb-tab-heading-xs="{{locals.heading_sm}}">' +
+                                'Content 1' +
+                            '</uib-tab>' +
+                            '</uib-tabset>';
+
+            $scope.locals = {
+                heading_lg: 'Looooong heading',
+                heading_sm: 'Heading'
+            };
+
+            el = $compile(tabHtml)($scope);
+            $scope.$digest();
+            largeHeadingEl = el.find('li a .hidden-xs');
+            expect(largeHeadingEl).toHaveText($scope.locals.heading_lg);
+            smallHeadingEl = el.find('li a .visible-xs');
+            expect(smallHeadingEl).toHaveText($scope.locals.heading_sm);
+
+            $scope.locals.heading_sm = '1';
+            $scope.$digest();
+
+            smallHeadingEl = el.find('li a .visible-xs');
+            expect(smallHeadingEl).toHaveText($scope.locals.heading_sm);
+
+        });
+    });
 
     describe('adding tabs', function () {
         it('adds tabs', function () {
@@ -63,6 +216,17 @@ describe('Tabset module', function () {
             getLargeScreenAddButton(el).click();
             $scope.$digest();
             expect(tabAdded).toBe(true);
+        });
+
+        it('should allows the screen reader text for the add tab button to be localizable', function () {
+            var el;
+
+            bbResources.tab_add = '__test__add';
+
+            el = $compile(dynamicTabsHtml)($scope);
+            $scope.$digest();
+
+            expect(el.find('.bb-tab-button-add').attr('aria-label')).toContain(bbResources.tab_add);
         });
     });
 
@@ -84,20 +248,20 @@ describe('Tabset module', function () {
     });
     describe('no add open', function () {
         it('adds no buttons if add and open are not defined', function () {
-            var noButtonsHtml = '<tabset>' +
-                    '<tab>' +
-                        '<tab-heading>' +
+            var noButtonsHtml = '<uib-tabset>' +
+                    '<uib-tab>' +
+                        '<uib-tab-heading>' +
                             'Tab 1' +
-                        '</tab-heading>' +
+                        '</uib-tab-heading>' +
                         'Yo' +
-                    '</tab>' +
-                    '<tab>' +
-                        '<tab-heading>' +
+                    '</uib-tab>' +
+                    '<uib-tab>' +
+                        '<uib-tab-heading>' +
                             'Tab 2' +
-                        '</tab-heading>' +
+                        '</uib-tab-heading>' +
                         'Hey' +
-                    '</tab>' +
-                '</tabset>',
+                    '</uib-tab>' +
+                '</uib-tabset>',
                 el,
                 addButtonEl,
                 openButtonEl;
@@ -113,20 +277,20 @@ describe('Tabset module', function () {
         });
 
         it('adds only the add button if only the add button is defined', function () {
-            var addOnlyHtml = '<tabset bb-tabset-add="addTab()">' +
-                    '<tab>' +
-                        '<tab-heading>' +
+            var addOnlyHtml = '<uib-tabset bb-tabset-add="addTab()">' +
+                    '<uib-tab>' +
+                        '<uib-tab-heading>' +
                             'Tab 1' +
-                        '</tab-heading>' +
+                        '</uib-tab-heading>' +
                         'Yo' +
-                    '</tab>' +
-                    '<tab>' +
-                        '<tab-heading>' +
+                    '</uib-tab>' +
+                    '<uib-tab>' +
+                        '<uib-tab-heading>' +
                             'Tab 2' +
-                        '</tab-heading>' +
+                        '</uib-tab-heading>' +
                         'Hey' +
-                    '</tab>' +
-                '</tabset>',
+                    '</uib-tab>' +
+                '</uib-tabset>',
                 el,
                 openButtonEl,
                 tabAdded = false;
@@ -147,20 +311,20 @@ describe('Tabset module', function () {
         });
 
         it('adds only the open button if only the open button is defined', function () {
-            var openOnlyHtml = '<tabset bb-tabset-open="openTab()">' +
-                    '<tab>' +
-                        '<tab-heading>' +
+            var openOnlyHtml = '<uib-tabset bb-tabset-open="openTab()">' +
+                    '<uib-tab>' +
+                        '<uib-tab-heading>' +
                             'Tab 1' +
-                        '</tab-heading>' +
+                        '</uib-tab-heading>' +
                         'Yo' +
-                    '</tab>' +
-                    '<tab>' +
-                        '<tab-heading>' +
+                    '</uib-tab>' +
+                    '<uib-tab>' +
+                        '<uib-tab-heading>' +
                             'Tab 2' +
-                        '</tab-heading>' +
+                        '</uib-tab-heading>' +
                         'Hey' +
-                    '</tab>' +
-                '</tabset>',
+                    '</uib-tab>' +
+                '</uib-tabset>',
                 el,
                 addButtonEl,
                 tabOpened = false;
@@ -185,22 +349,78 @@ describe('Tabset module', function () {
         var addButtonEl,
             openButtonEl,
             callback,
+            allCallbacks,
             collapsibleTabsHtml,
+             collapsibleTabsInnerTabHtml,
+            collapsibleSpecificTabsHtml,
+            collapsibleSpecificNoAddOpenTabsHtml,
             dropdownWrapperEl,
             tabTitleEl,
             tabCount,
             tabsEl;
 
         beforeEach(function () {
-            collapsibleTabsHtml = '<tabset bb-tabset-add="addTab()" bb-tabset-open="openTab()" bb-tabset-collapsible>' +
-            '<tab bb-tab-collapse-header="t.title" ng-repeat="t in myTabs" class="bb-tab-close">' +
-                '<tab-heading>' +
+            var specificTabs = '<uib-tab bb-tab-collapse-header="\'Tab 1\'" class="bb-tab-close">' +
+                '<uib-tab-heading>' +
+                    'Tab 1' +
+                    '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
+                '</uib-tab-heading>' +
+                '<span class="bb-test-content">1 content</span>' +
+                '<ul class="bb-test-ul"><li class="bb-test-li">1</li></ul>' +
+            '</uib-tab>' +
+            '<uib-tab bb-tab-collapse-header="\'Tab 2\'" class="bb-tab-close">' +
+                '<uib-tab-heading>' +
+                    'Tab 2' +
+                    '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
+                '</uib-tab-heading>' +
+                '<span class="bb-test-content">2 content</span>' +
+                '<ul class="bb-test-ul"><li class="bb-test-li">1</li></ul>' +
+            '</uib-tab>' +
+            '<uib-tab bb-tab-collapse-header="\'Tab 3\'" class="bb-tab-close">' +
+                '<uib-tab-heading>' +
+                    'Tab 3' +
+                    '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
+                '</uib-tab-heading>' +
+                '<span class="bb-test-content">3 content</span>' +
+                '<ul class="bb-test-ul"><li class="bb-test-li">1</li></ul>' +
+            '</uib-tab>' +
+            '</uib-tabset>';
+            collapsibleTabsHtml = '<uib-tabset bb-tabset-add="addTab()" bb-tabset-open="openTab()" bb-tabset-collapsible>' +
+            '<uib-tab bb-tab-collapse-header="t.title" ng-repeat="t in myTabs" class="bb-tab-close">' +
+                '<uib-tab-heading>' +
                     '{{t.title}}' +
                     '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
-                '</tab-heading>' +
-                '{{t.content}}' +
-            '</tab>' +
-            '</tabset>';
+                '</uib-tab-heading>' +
+                '<span class="bb-test-content">{{t.content}}</span>' +
+                '<ul class="bb-test-ul"><li class="bb-test-li">1</li></ul>' +
+            '</uib-tab>' +
+            '</uib-tabset>';
+            collapsibleTabsInnerTabHtml = '<uib-tabset bb-tabset-collapsible>' +
+                '<uib-tab bb-tab-collapse-header="\'Testing\'">' +
+                '<uib-tab-heading>Testing</uib-tab-heading>' +
+                '<div>' +
+                'tab body one' +
+                '</div>' +
+                '</uib-tab>' +
+                '<uib-tab bb-tab-collapse-header="\'Second tab\'">' +
+                '<uib-tab-heading>Second tab</uib-tab-heading>' +
+                '<div>' +
+                '<uib-tabset bb-tabset-collapsible>' +
+                '<uib-tab bb-tab-collapse-header="\'Third tab\'">' +
+                '<uib-tab-heading>Third tab</uib-tab-heading>' +
+                '</uib-tab>' +
+                '<uib-tab bb-tab-collapse-header="\'Fourth tab\'">' +
+                '<uib-tab-heading>Fourth tab</uib-tab-heading>' +
+                '</uib-tab>' +
+                '</uib-tabset>' +
+                '</div>' +
+                '</uib-tab>' +
+                '</uib-tabset>';
+            collapsibleSpecificTabsHtml = '<uib-tabset bb-tabset-add="addTab()" bb-tabset-open="openTab()" bb-tabset-collapsible>' +
+                specificTabs;
+            collapsibleSpecificNoAddOpenTabsHtml = '<uib-tabset bb-tabset-collapsible>' +
+                specificTabs;
+
 
             $scope.myTabs = [
                 {
@@ -256,7 +476,7 @@ describe('Tabset module', function () {
         }
 
         function getActiveTabContent(el) {
-            return el.find('.tab-pane.active span');
+            return el.find('.tab-pane.active span.bb-test-content');
         }
 
         function callBreakpointImmediate(tabCallback) {
@@ -265,12 +485,14 @@ describe('Tabset module', function () {
 
         function setupCollapsibleTest(htmlTemplate, spyFunction) {
             var el;
+            allCallbacks = [];
 
             if (angular.isDefined(spyFunction)) {
                 spyOn(bbMediaBreakpoints, 'register').and.callFake(spyFunction);
             } else {
                 spyOn(bbMediaBreakpoints, 'register').and.callFake(function (tabCallback) {
-                    callback = tabCallback;
+                    allCallbacks.push(tabCallback);
+                    callback = allCallbacks[0];
                 });
             }
 
@@ -279,11 +501,18 @@ describe('Tabset module', function () {
             $compile(el)($scope);
 
             $scope.$digest();
+            $timeout.flush();
+            $scope.$digest();
             return el;
         }
 
         function getTabDropdownButton(el) {
             return el.find('.bb-tab-dropdown-button');
+        }
+
+        function verifyChildList(el) {
+            expect(el.find('.tab-pane.active ul.bb-test-ul li.bb-test-li').length).toBe(1);
+            expect(el.find('.bb-tabset-dropdown ul.bb-test-ul li.bb-test-li').length).toBe(0);
         }
 
         function validateSmallMode(el) {
@@ -302,6 +531,8 @@ describe('Tabset module', function () {
             tabsEl.eq(1).click();
             $scope.$digest();
             expect(getActiveTabContent(el)).toHaveText($scope.myTabs[1].content);
+
+            verifyChildList(el);
 
             tabTitleEl = getTabDropdownButton(el);
             expect(tabTitleEl).toHaveText($scope.myTabs[1].title);
@@ -336,6 +567,7 @@ describe('Tabset module', function () {
             expect(openButtonEl.length).toBe(0);
 
             expect(getActiveTabContent(el)).toHaveText($scope.myTabs[activeIndex].content);
+            verifyChildList(el);
         }
 
         it('collapses into a dropdown on extra small mode when there is more than 1 tab', function () {
@@ -347,7 +579,6 @@ describe('Tabset module', function () {
 
             tabsEl = getLargeScreenTabs(el);
             expect(tabsEl.length).toBe(3);
-
             dropdownWrapperEl = getDropdownWrapper(el);
             expect(dropdownWrapperEl).not.toBeVisible();
 
@@ -388,15 +619,15 @@ describe('Tabset module', function () {
         }
 
         it('collapses in xs when there are no add or open buttons', function () {
-            var collapsibleNoAddOpenTabsHtml = '<tabset bb-tabset-collapsible>' +
-            '<tab bb-tab-collapse-header="t.title" ng-repeat="t in myTabs" class="bb-tab-close">' +
-                '<tab-heading>' +
+            var collapsibleNoAddOpenTabsHtml = '<uib-tabset bb-tabset-collapsible>' +
+            '<uib-tab bb-tab-collapse-header="t.title" ng-repeat="t in myTabs" class="bb-tab-close">' +
+                '<uib-tab-heading>' +
                     '{{t.title}}' +
                     '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
-                '</tab-heading>' +
+                '</uib-tab-heading>' +
                 '{{t.content}}' +
-            '</tab>' +
-            '</tabset>',
+            '</uib-tab>' +
+            '</uib-tabset>',
                 el;
 
             el = setupCollapsibleTest(collapsibleNoAddOpenTabsHtml);
@@ -415,31 +646,8 @@ describe('Tabset module', function () {
         });
 
         it('collapses in xs when tabs are specifically defined', function () {
-            var collapsibleNoAddOpenTabsHtml = '<tabset bb-tabset-collapsible>' +
-            '<tab bb-tab-collapse-header="\'Tab 1\'" class="bb-tab-close">' +
-                '<tab-heading>' +
-                    'Tab 1' +
-                    '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
-                '</tab-heading>' +
-                '1 content' +
-            '</tab>' +
-            '<tab bb-tab-collapse-header="\'Tab 2\'" class="bb-tab-close">' +
-                '<tab-heading>' +
-                    'Tab 2' +
-                    '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
-                '</tab-heading>' +
-                '2 content' +
-            '</tab>' +
-            '<tab bb-tab-collapse-header="\'Tab 3\'" class="bb-tab-close">' +
-                '<tab-heading>' +
-                    'Tab 3' +
-                    '<button type="button" class="bb-tab-close-icon" ng-click="closeTab($index, $event)"></button>' +
-                '</tab-heading>' +
-                '3 content' +
-            '</tab>' +
-            '</tabset>',
-                el;
-            el = setupCollapsibleTest(collapsibleNoAddOpenTabsHtml);
+            var el;
+            el = setupCollapsibleTest(collapsibleSpecificNoAddOpenTabsHtml);
             callback({xs: true});
             $scope.$digest();
 
@@ -451,13 +659,22 @@ describe('Tabset module', function () {
             verifyNoAddOpenButtons(el);
 
             el.remove();
-
         });
 
         it('works correctly when starting in extra small mode', function () {
             var el;
 
             el = setupCollapsibleTest(collapsibleTabsHtml, callBreakpointImmediate);
+
+            validateSmallMode(el);
+
+            el.remove();
+        });
+
+        it('works correctly when starting in extra small mode when tabs are specifically defined', function () {
+            var el;
+
+            el = setupCollapsibleTest(collapsibleSpecificTabsHtml, callBreakpointImmediate);
 
             validateSmallMode(el);
 
@@ -495,11 +712,11 @@ describe('Tabset module', function () {
 
         it('has the correct dropdown title in extra small mode when title changes using heading', function () {
             var el,
-                headingTabsHtml = '<tabset bb-tabset-add="addTab()" bb-tabset-open="openTab()" bb-tabset-collapsible>' +
-            '<tab heading="{{t.title}}" ng-repeat="t in myTabs" class="bb-tab-close">' +
+                headingTabsHtml = '<uib-tabset bb-tabset-add="addTab()" bb-tabset-open="openTab()" bb-tabset-collapsible>' +
+            '<uib-tab heading="{{t.title}}" ng-repeat="t in myTabs" class="bb-tab-close">' +
                 '{{t.content}}' +
-            '</tab>' +
-            '</tabset>';
+            '</uib-tab>' +
+            '</uib-tabset>';
 
             el = setupCollapsibleTest(headingTabsHtml);
 
@@ -537,7 +754,7 @@ describe('Tabset module', function () {
             $scope.$digest();
             tabsEl = getSmallScreenTabs(el);
             expect(tabsEl.length).toBe(3);
-            expect(tabsEl.eq(0).find('tab-heading')).toHaveText($scope.myTabs[0].title);
+            expect(tabsEl.eq(0).find('uib-tab-heading')).toHaveText($scope.myTabs[0].title);
 
             callback({xs: false});
             $scope.$digest();
@@ -545,7 +762,7 @@ describe('Tabset module', function () {
             tabsEl = getLargeScreenTabs(el);
             expect(tabsEl.length).toBe(3);
             expect(getActiveTabContent(el)).toHaveText($scope.myTabs[2].content);
-            expect(tabsEl.eq(0).find('tab-heading')).toHaveText($scope.myTabs[0].title);
+            expect(tabsEl.eq(0).find('uib-tab-heading')).toHaveText($scope.myTabs[0].title);
 
             el.remove();
 
@@ -613,6 +830,71 @@ describe('Tabset module', function () {
                 el.remove();
             });
 
+            it('does not set max-width when nested tabs are hidden', function () {
+                var el,
+                    dropdownTextEl,
+                    dropdownMenuItemEl,
+                    dropdownMenuListItemEl,
+                    tabTitleEl;
+
+                el = setupCollapsibleTest(collapsibleTabsInnerTabHtml);
+
+                $scope.$digest();
+
+                allCallbacks[0]({xs: true});
+                allCallbacks[1]({xs: true});
+
+                $scope.$digest();
+                $scope.$digest();
+
+                //switch tabs
+                tabsEl = getSmallScreenTabs(el);
+
+                tabTitleEl = getTabDropdownButton(el);
+                tabTitleEl.click();
+                $scope.$digest();
+
+                tabsEl.eq(1).click();
+                $scope.$digest();
+
+                //verify no max width
+                dropdownTextEl = el.find('.bb-tab-header-text');
+                dropdownMenuItemEl = el.find('.bb-tabset-dropdown ul.dropdown-menu li a');
+                expect(dropdownTextEl[1].style.maxWidth).toBe('');
+                expect(dropdownMenuItemEl[2].style.maxWidth).toBe('');
+                expect(dropdownMenuItemEl[3].style.maxWidth).toBe('');
+
+                //change to second inner tab
+                tabsEl.eq(3).click();
+                $scope.$digest();
+
+                //verify button/dropdown
+                dropdownTextEl = el.find('.bb-tab-header-text');
+                dropdownMenuItemEl = el.find('.bb-tabset-dropdown ul.dropdown-menu li a');
+                dropdownMenuListItemEl = el.find('.bb-tabset-dropdown ul.dropdown-menu li');
+                expect(dropdownTextEl.eq(1)).toHaveText('Fourth tab');
+                expect(dropdownMenuItemEl.eq(2)).toHaveText('Third tab');
+                expect(dropdownMenuItemEl.eq(3)).toHaveText('Fourth tab');
+                expect(dropdownMenuListItemEl.eq(3)).toHaveClass('active');
+
+                //switch to large screen
+                allCallbacks[0]({xs: false});
+                allCallbacks[1]({xs: false});
+
+                $scope.$digest();
+
+                //verify inner tabs
+                dropdownTextEl = el.find('.bb-tab-header-text');
+                dropdownMenuItemEl = el.find('ul.nav-tabs li a');
+                dropdownMenuListItemEl = el.find('ul.nav-tabs li');
+                expect(dropdownTextEl.eq(1)).toHaveText('Fourth tab');
+                expect(dropdownMenuItemEl.eq(2)).toHaveText('Third tab');
+                expect(dropdownMenuItemEl.eq(3)).toHaveText('Fourth tab');
+                expect(dropdownMenuListItemEl.eq(3)).toHaveClass('active');
+
+                el.remove();
+            });
+
             function getWidthSpy(widthFn, fakeWindowWidth) {
                 return spyOn($.fn, 'width').and.callFake(function () {
                     if (this[0] === window) {
@@ -650,7 +932,6 @@ describe('Tabset module', function () {
                 dropdownMenuItemEl = el.find('.bb-tabset-dropdown ul.dropdown-menu li a');
 
                 verifyMaxWidths(el, dropdownTextEl, dropdownMenuItemEl);
-
                 el.width(600);
 
                 spyWindowWidth = 200;
@@ -665,6 +946,220 @@ describe('Tabset module', function () {
 
                 el.remove();
             });
+        });
+    });
+
+    describe('vertical tabset', function () {
+        var groupedTabsHtml,
+            ungroupedTabsHtml,
+            invalidTabsHtml,
+            verticalTabsetTemplateOverrideHtml,
+            tabsetTemplateOverrideHtml,
+            el,
+            isolateScope;
+
+        beforeEach(function () {
+            groupedTabsHtml = '' +
+                '<uib-tabset active="active" bb-vertical-tabset bb-vertical-tabset-close-others="closeOthers">' +
+                '  <div bb-vertical-tabset-group bb-vertical-tabset-group-heading="Group 1" bb-vertical-tabset-group-is-open="isOpen">' +
+                '    <uib-tab heading="Group 1 - Tab 1">' +
+                '      <p>Group 1, tab 1 content</p>' +
+                '    </uib-tab>' +
+                '    <uib-tab heading="Group 1 - Tab 2">' +
+                '      <p>Group 1, tab 2 content</p>' +
+                '    </uib-tab>' +
+                '  </div>' +
+                '  <div bb-vertical-tabset-group bb-vertical-tabset-group-is-disabled="true" bb-vertical-tabset-group-heading="Group 2">' +
+                '    <uib-tab heading="Group 2 - Tab 1">' +
+                '      <p>Group 2, tab 1 contents</p>' +
+                '    </uib-tab>' +
+                '  </div>' +
+                '</uib-tabset>';
+
+            ungroupedTabsHtml = '' +
+                '<uib-tabset bb-vertical-tabset active="active">' +
+                '  <uib-tab heading="Tab 1">' +
+                '    <p>Tab 1 content</p>' +
+                '  </uib-tab>' +
+                '  <uib-tab heading="Tab 2">' +
+                '    <p>Tab 2 content</p>' +
+                '  </uib-tab>' +
+                '</uib-tabset>';
+
+            invalidTabsHtml = '' +
+                '<uib-tabset bb-vertical-tabset bb-tabset-add bb-tabset-open bb-tabset-collapsible justified="true" type="pills" vertical="false">' +
+                '</uib-tabset>';
+
+            verticalTabsetTemplateOverrideHtml = '' +
+                '<uib-tabset active="active" bb-vertical-tabset bb-vertical-tabset-close-others="closeOthers">' +
+                '  <div bb-vertical-tabset-group bb-vertical-tabset-group-heading="Group 1" bb-vertical-tabset-group-is-open="isOpen" bb-vertical-tabset-group-template-url="sky/templates/tabset/verticaltabsetgroupoverride.html">' +
+                '    <uib-tab heading="Group 1 - Tab 1">' +
+                '      <p>Group 1, tab 1 content</p>' +
+                '    </uib-tab>' +
+                '    <uib-tab heading="Group 1 - Tab 2">' +
+                '      <p>Group 1, tab 2 content</p>' +
+                '    </uib-tab>' +
+                '  </div>' +
+                '  <div bb-vertical-tabset-group bb-vertical-tabset-group-is-disabled="true" bb-vertical-tabset-group-heading="Group 2">' +
+                '    <uib-tab heading="Group 2 - Tab 1">' +
+                '      <p>Group 2, tab 1 contents</p>' +
+                '    </uib-tab>' +
+                '  </div>' +
+                '</uib-tabset>';
+
+            tabsetTemplateOverrideHtml = '' +
+                '<uib-tabset active="active" bb-vertical-tabset bb-vertical-tabset-close-others="closeOthers" ' +
+                '   template-url="sky/templates/tabset/verticaltabsetoverride.html">' +
+                '  <div bb-vertical-tabset-group bb-vertical-tabset-group-heading="Group 1" bb-vertical-tabset-group-is-open="isOpen">' +
+                '    <uib-tab heading="Group 1 - Tab 1">' +
+                '      <p>Group 1, tab 1 content</p>' +
+                '    </uib-tab>' +
+                '    <uib-tab heading="Group 1 - Tab 2">' +
+                '      <p>Group 1, tab 2 content</p>' +
+                '    </uib-tab>' +
+                '  </div>' +
+                '  <div bb-vertical-tabset-group bb-vertical-tabset-group-is-disabled="true" bb-vertical-tabset-group-heading="Group 2">' +
+                '    <uib-tab heading="Group 2 - Tab 1">' +
+                '      <p>Group 2, tab 1 contents</p>' +
+                '    </uib-tab>' +
+                '  </div>' +
+                '</uib-tabset>';
+        });
+
+        function setUpBreakpointTest(isMobile) {
+            spyOn(bbMediaBreakpoints, 'register').and.callFake(function (fn) {
+                fn({
+                    xs: isMobile
+                });
+            });
+            spyOn(bbMediaBreakpoints, 'unregister').and.stub();
+        }
+
+        function buildVerticalTabsetElement(html) {
+            el = $compile(html)($scope);
+            $scope.$digest();
+            $timeout.flush();
+            isolateScope = el.isolateScope();
+        }
+
+        it('warns of use of incompatible features', function () {
+            spyOn($log, 'warn').and.stub();
+            buildVerticalTabsetElement(invalidTabsHtml);
+            expect($log.warn.calls.count()).toEqual(6);
+        });
+
+        it('allows overriding tabset group template URL', function () {
+            $templateCache.put('sky/templates/tabset/verticaltabsetgroupoverride.html',
+                '<li uib-accordion-group' +
+                '    class="bb-vertical-tabset-group override"' +
+                '    is-open="bbVerticalTabsetGroup.isOpen"' +
+                '    is-disabled="bbVerticalTabsetGroup.isDisabled">' +
+                '    <uib-accordion-heading>' +
+                '        <div class="bb-vertical-tabset-group-heading">' +
+                '            <span ng-class="{\'bb-vertical-tabset-group-active\':bbVerticalTabsetGroup.active}">' +
+                '                {{bbVerticalTabsetGroup.heading}}' +
+                '            </span>' +
+                '            <span class="bb-vertical-tabset-group-chevron"' +
+                '                ng-class="{\'bb-vertical-tabset-group-chevron-open\':bbVerticalTabsetGroup.isOpen}"></span>' +
+                '        </div>' +
+                '    </uib-accordion-heading>' +
+                '    <ul class="nav nav-tabs nav-stacked"' +
+                '        ng-transclude>' +
+                '    </ul>' +
+                '</li>');
+            buildVerticalTabsetElement(verticalTabsetTemplateOverrideHtml);
+            expect(el.html()).toContain('override');
+        });
+
+        it('closes other tab groups', function () {
+            $scope.closeOthers = true;
+            buildVerticalTabsetElement(groupedTabsHtml);
+            expect(isolateScope.closeOthers).toBe(true);
+        });
+
+        it('does not close other tab groups', function () {
+            $scope.closeOthers = false;
+            buildVerticalTabsetElement(groupedTabsHtml);
+            expect(isolateScope.closeOthers).toBe(false);
+        });
+
+        it('activates active tab and group', function () {
+            $scope.active = 1;
+            buildVerticalTabsetElement(groupedTabsHtml);
+            expect(isolateScope.tabset.tabs[1].tab.active).toBe(true);
+            expect(el.find('[bb-vertical-tabset-group]').eq(0).isolateScope().bbVerticalTabsetGroup.active).toBe(true);
+        });
+
+        it('tracks when a tabset group is open', function () {
+            buildVerticalTabsetElement(groupedTabsHtml);
+            expect(el.find('[bb-vertical-tabset-group]').eq(0).isolateScope().bbVerticalTabsetGroup.isOpen).toBe(true);
+        });
+
+        it('tracks when a tabset group is disabled', function () {
+            buildVerticalTabsetElement(groupedTabsHtml);
+            expect(el.find('[bb-vertical-tabset-group]').eq(1).isolateScope().bbVerticalTabsetGroup.isDisabled).toBe(true);
+        });
+
+        it('inserts headings for tabset groups', function () {
+            buildVerticalTabsetElement(groupedTabsHtml);
+            expect(el.find('[bb-vertical-tabset-group]').eq(0).isolateScope().bbVerticalTabsetGroup.heading).toBe('Group 1');
+            expect(el.find('[bb-vertical-tabset-group]').eq(1).isolateScope().bbVerticalTabsetGroup.heading).toBe('Group 2');
+        });
+
+        it('activates active tab when tabs are not grouped', function () {
+            $scope.active = 1;
+            buildVerticalTabsetElement(ungroupedTabsHtml);
+            expect(isolateScope.tabset.tabs[1].tab.active).toBe(true);
+        });
+
+        it('uses vertical tabset template when bb-vertical-tabset is present', function () {
+            buildVerticalTabsetElement(groupedTabsHtml);
+            expect(el.html()).toContain('uib-accordion');
+        });
+
+        it('does not deactivate all tabs when reinitialized on non-mobile device', function () {
+            $scope.active = 1;
+            setUpBreakpointTest(false);
+            buildVerticalTabsetElement(groupedTabsHtml);
+            $scope.$broadcast('reinitializeVerticalTabsetDisplay');
+            $scope.$apply();
+            expect(isolateScope.tabset.active).toBe(1);
+            expect(isolateScope.isMobile).toBe(false);
+            expect(isolateScope.showTabs).toBe(false);
+        });
+
+        it('deactivates all tabs when reinitialized on mobile device', function () {
+            $scope.active = 1;
+            setUpBreakpointTest(true);
+            buildVerticalTabsetElement(groupedTabsHtml);
+            $scope.$broadcast('reinitializeVerticalTabsetDisplay');
+            $scope.$apply();
+            expect(isolateScope.tabset.active).not.toBe(1);
+            expect(isolateScope.isMobile).toBe(true);
+            expect(isolateScope.showTabs).toBe(true);
+        });
+
+        it('allows overriding uibTabset template url', function () {
+            $templateCache.put('sky/templates/tabset/verticaltabsetoverride.html',
+                '<div class="bb-vertical-tabset">' +
+                '  <uib-accordion class="bb-vertical-tabset-tabs override" ' +
+                '      close-others="closeOthers" ' +
+                '      ng-hide="isMobile && !showTabs">' +
+                '    <ul class="nav nav-tabs nav-stacked" ' +
+                '        ng-transclude></ul>' +
+                '  </uib-accordion>' +
+                '  <div class="tab-content"' +
+                '      ng-hide="isMobile && showTabs">' +
+                '    <div class="tab-pane"' +
+                '         ng-repeat="tab in tabset.tabs"' +
+                '         ng-class="{active: tabset.active === tab.index}"' +
+                '         uib-tab-content-transclude="tab">' +
+                '    </div>' +
+                '  </div>' +
+                '</div>'
+            );
+            buildVerticalTabsetElement(tabsetTemplateOverrideHtml);
+            expect(el.html()).toContain('override');
         });
     });
 });

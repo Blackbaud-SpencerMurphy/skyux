@@ -1,30 +1,16 @@
-
-/*global describe, it, browser, beforeEach, expect, require */
+/*global describe, it, browser */
 
 describe('buttons', function () {
     'use strict';
 
-    var options = {};
-
-    beforeEach(function (done) {
-        require('../common').initWebdriverCss(browser, options, done);
-    });
-
-    it('should take the button screenshots', function (done) {
-        var screenshotName = 'buttons',
-            pageName = options.prefix + screenshotName + '_full';
-        browser
-            .url('/buttons/fixtures/test.full.html')
-            .webdrivercss(pageName, [
-                {
-                    name: screenshotName,
-                    elem: '#screenshot-buttons'
-                }
-            ], function (err, res) {
-                expect(err).toBe(undefined);
-                expect(res[screenshotName][0].isWithinMisMatchTolerance).toBe(true);
-            })
-            .call(done);
+    it('should match the baseline buttons screenshot', function () {
+        return browser
+            .setupTest('/buttons/fixtures/test.full.html')
+            .compareScreenshot({
+                screenshotName: 'buttons',
+                selector: '#screenshot-buttons',
+                checkAccessibility: true
+            });
     });
 
     function getSelector(type, prefix) {
@@ -32,55 +18,49 @@ describe('buttons', function () {
         return selector;
     }
 
-    function clickTest(type, done, prefix) {
-        var screenshotName = 'button_' + type + '_click',
-            selector = getSelector(type, prefix),
-            pageName = options.prefix + screenshotName + '_full';
-        browser
-            .url('/buttons/fixtures/test.full.html')
+    function clickTest(type, prefix) {
+        var selector = getSelector(type, prefix);
+
+        return browser
+            .setupTest('/buttons/fixtures/test.full.html')
             .click(selector)
-            .webdrivercss(pageName, [
-                {
-                    name: screenshotName,
-                    elem: ('#screenshots-buttons-' + type)
-                }
-            ], function (err, res) {
-                expect(err).toBe(undefined);
-                expect(res[screenshotName][0].isWithinMisMatchTolerance).toBe(true);
-            })
-            .call(done);
+            .compareScreenshot({
+                screenshotName: ('button_' + type + '_click'),
+                selector: ('#screenshots-buttons-' + type),
+                checkAccessibility: true
+            });
     }
 
-    it('should take the button default click test', function (done) {
-        clickTest('default', done);
+    it('should match the baseline screenshot while clicking a default button', function () {
+        return clickTest('default');
     });
 
-    it('should take the button primary click test', function (done) {
-        clickTest('primary', done);
+    it('should match the baseline screenshot while clicking a primary button', function () {
+        return clickTest('primary');
     });
 
-    it('should take the button secondary click test', function (done) {
-        clickTest('secondary', done, 'bb');
+    it('should match the baseline screenshot while clicking a secondary button', function () {
+        return clickTest('secondary', 'bb');
     });
 
-    it('should take the button success click test', function (done) {
-        clickTest('success', done);
+    it('should match the baseline screenshot while clicking a success button', function () {
+        return clickTest('success');
     });
 
-    it('should take the button info click test', function (done) {
-        clickTest('info', done);
+    it('should match the baseline screenshot while clicking an info button', function () {
+        return clickTest('info');
     });
 
-    it('should take the button warning click test', function (done) {
-        clickTest('warning', done);
+    it('should match the baseline screenshot while clicking a warning button', function () {
+        return clickTest('warning');
     });
 
-    it('should take the button danger click test', function (done) {
-        clickTest('danger', done);
+    it('should match the baseline screenshot while clicking a danger button', function () {
+        return clickTest('danger');
     });
 
-    it('should take the button link click test', function (done) {
-        clickTest('link', done);
+    it('should match the baseline screenshot while clicking a link button', function () {
+        return clickTest('link');
     });
 
 });

@@ -1,28 +1,42 @@
-
-/*global describe, it, browser, beforeEach, expect, require */
+/*global describe, it, browser */
 
 describe('check', function () {
     'use strict';
 
-    var options = {};
-
-    beforeEach(function (done) {
-        require('../common').initWebdriverCss(browser, options, done);
+    it('should match the baseline check screenshot', function () {
+        return browser
+            .setupTest('/check/fixtures/test.full.html')
+            .compareScreenshot({
+                screenshotName: 'check',
+                selector: '#screenshot-check',
+                checkAccessibility: true
+            });
     });
 
-    it('should take check screenshots', function (done) {
-        var screenshotName = 'check',
-            pageName = options.prefix + screenshotName + '_full';
-        browser
-            .url('/check/fixtures/test.full.html')
-            .webdrivercss(pageName, [
-                {
-                    name: screenshotName,
-                    elem: '#screenshot-check'
-                }
-            ], function (err, res) {
-                expect(err).toBe(undefined);
-                expect(res[screenshotName][0].isWithinMisMatchTolerance).toBe(true);
-            }).call(done);
-    });
+    it(
+        'should match the baseline check screenshot when a checkbox is in an inline form', 
+        function () {
+            return browser
+                .setupTest('/check/fixtures/test.full.html')
+                .compareScreenshot({
+                    screenshotName: 'check_inline',
+                    selector: '#screenshot-check-inline',
+                    checkAccessibility: true
+                });
+        }
+    );
+
+    it(
+        'should match the baseline check screenshot when a checkbox is in an inline form ' +
+        'at a small screen size', 
+        function () {
+            return browser
+                .setupTest('/check/fixtures/test.full.html', 480)
+                .compareScreenshot({
+                    screenshotName: 'check_inline_small',
+                    selector: '#screenshot-check-inline',
+                    checkAccessibility: true
+                });
+        }
+    );
 });

@@ -1,18 +1,26 @@
 @import "mixins";
 
 .bb-check-wrapper input {
-    opacity: 0.0;
-    width: 0;
-    height: 0;
+    opacity: 0;
     position: absolute;
+    height: 22px;
+    width: 22px;
+    margin: 0;
+    padding: 0;
+}
+
+.bb-check-wrapper {
+  span.bb-check-label-text {
+    vertical-align: middle;
+    font-weight: 400;
+  }
 }
 
 .bb-check-checkbox,
-.bb-check-radio{
+.bb-check-radio {
     border: 1px solid $gray-lighter;
     cursor: pointer;
     display: inline-block;
-    *display: inline;
     height: 22px;
     margin: 0;
     padding: 0;
@@ -20,14 +28,16 @@
     width: 22px;
     text-align: center;
     font-size: 14px;
+    background-color: $bb-color-white;
+    line-height: 23px;
 }
 
 .bb-check-radio {
     border-radius: 50%;
 }
 
-.bb-check-checkbox:hover,
-.bb-check-radio:hover {
+.bb-check-wrapper input:hover + .bb-check-checkbox,
+.bb-check-wrapper input:hover + .bb-check-radio {
     border: 2px solid $bb-color-blue;
 }
 
@@ -37,27 +47,30 @@
     border: none;
 
     &:before {
-        color: $bb-color-white;
-        content: $bbsky-char-check-nostroke;
-        font-family: BBSKY;
-        font-size: $bb-font-size-sm;
+      color: $bb-color-white;
+      content: $bbsky-char-check-nostroke;
+      font-family: BBSKY;
+      font-size: $bb-font-size-sm;
     }
 }
 
 
 .bb-check-wrapper input:disabled + .bb-check-checkbox,
 .bb-check-wrapper input:disabled + .bb-check-radio {
-    background-color: $gray-lighter;
+    background-color: $input-bg-disabled;
     border: 1px solid $gray-lighter;
     cursor: default;
 }
 
 .bb-check-wrapper input:focus + .bb-check-checkbox,
 .bb-check-wrapper input:focus + .bb-check-radio {
-  //default
-  outline: thin dotted;
+    @include bb-focus-indication();
+}
 
-  //webkit
-  outline: -webkit-focus-ring-color auto 5px;
-  outline-offset: -2px;
+@media (min-width: $screen-sm-min) {
+    .form-inline {
+        .bb-check-wrapper {
+            margin-bottom: 0;
+        }
+    }
 }

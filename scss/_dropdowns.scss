@@ -4,9 +4,10 @@
   box-shadow: 0 0 3px rgba(86, 96, 117, 0.7);
   display: none;
   float: left;
-  font-size: 12px;
+  font-size: $font-size-base;
   left: 0;
   list-style: none outside none;
+  margin-bottom: $margin-half;
   padding: 0;
   position: absolute;
   text-shadow: none;
@@ -24,6 +25,8 @@
   font-weight: normal;
 }
 
+
+
 .caret {
     border-top: none;
     border-right: none;
@@ -39,8 +42,8 @@
     border-color: #c1c1c1;
     border-radius: 50%;
     padding: 0;
-    height: 24px;
-    width: 24px;
+    height: $bb-context-menu-size;
+    width: $bb-context-menu-size;
 
     &:hover,
     &:focus,
@@ -50,12 +53,7 @@
     }
 
     &:focus {
-      //default
-      outline: thin dotted;
-
-      //webkit
-      outline: -webkit-focus-ring-color auto 5px;
-      outline-offset: -2px;
+      @include bb-focus-indication();
     }
 }
 
@@ -118,9 +116,13 @@
     }
 }
 
-.bb-context-menu .dropdown-menu {
+.bb-context-menu .dropdown-menu, .dropdown-menu bb-context-menu-item, .bb-dropdown-menu.dropdown-menu {
+  
+    li.disabled, .bb-dropdown-item.disabled {
+        pointer-events:none;  
+    }
 
-    li > a {
+    li > a, .bb-dropdown-item > a, .bb-dropdown-item > .bb-btn-secondary {
         border-radius: 3px;
         clear: both;
         color: inherit;
@@ -133,11 +135,29 @@
         white-space: nowrap;
     }
 
-    li > a.font-bold {
+    .bb-dropdown-item > .bb-btn-secondary {
+        background-color: transparent;
+        display: block;
+        box-sizing: border-box;
+        padding: 3px 20px;
+        clear: both;
+        white-space: nowrap;
+        font-weight: normal;
+        font-size: $font-size-base;
+        text-align: left;
+        margin: 4px;
+        line-height: 25px;
+        color: inherit;
+        border: none;
+        border-radius: 3px;
+        width: 95%;
+    }
+
+    li > a.font-bold, .bb-dropdown-item > a.font-bold {
         font-weight: 600;
     }
 
-    li > a, .bb-submenu .panel-body a {
+    li > a, .bb-submenu .panel-body a, .bb-dropdown-item > a, .bb-dropdown-item > .bb-btn-secondary {
         &:hover,
         &:focus {
             text-decoration: none;
@@ -202,7 +222,7 @@ body.dropup {
     }
 
     .panel-title {
-        > a {
+        > .accordion-toggle {
             outline: none;
             font-weight: normal;
         }
@@ -222,5 +242,11 @@ body.dropup {
     ul {
         list-style: none outside none;
         padding: 0;
+    }
+}
+
+.modal-open.uib-dropdown-open {
+    .dropdown-menu {
+        z-index: $bb-zindex-dropdown-append-to-body;
     }
 }

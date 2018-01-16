@@ -12,7 +12,10 @@
             scope: {
                 bbOptions: "="
             },
-            controller: ['$scope', function ($scope) {
+            controller: ['$scope', '$log', function ($scope, $log) {
+
+                $log.warn('The bb-grid-filters directive is deprecated. Use a filter modal instead. See http://skyux.developer.blackbaud.com/components/grids/ for examples');
+
                 $scope.applyFilters = function () {
                     var args = {},
                         options = $scope.bbOptions;
@@ -68,13 +71,11 @@
                 };
 
                 bbGrid.scope.$watch('gridCreated', function (newValue) {
+                    /* istanbul ignore else */
+                    /* sanity check */
                     if (newValue) {
                         element.parents('.bb-grid-container').prepend(element);
                         element.show();
-
-                        if ($scope.locals.expanded) {
-                            animateFilters($scope.locals.expanded);
-                        }
                     }
                 });
 
@@ -123,28 +124,43 @@
             templateUrl: 'sky/templates/grids/filtersgroup.html'
         };
     })
-    .directive('bbGridFiltersSummary', ['bbResources', function (bbResources) {
+    .directive('bbGridFiltersSummary', ['bbResources', '$log', function (bbResources, $log) {
         return {
             require: '^bbGrid',
             replace: true,
             transclude: true,
             restrict: 'E',
             scope: {
-                bbOptions: "="
             },
+            bindToController: {
+                bbOptions: '=',
+                bbGridFiltersSummaryDismissable: '=?'
+            },
+            controllerAs: 'gridFilterSummary',
             controller: ['$scope', function ($scope) {
-                $scope.clearFilters = function () {
-                    var args = {},
-                        options = $scope.bbOptions;
+                var ctrl = this;
 
-                    if (options && options.clearFilters) {
-                        options.clearFilters(args);
-                        $scope.updateFilters(args.filters);
+                function onInit() {
+                    $log.warn('The bb-grid-filters-summary directive is deprecated. Use the bb-filter-summary component instead. See http://skyux.developer.blackbaud.com/components/grids/ for examples');
+
+                    $scope.clearFilters = function () {
+                        var args = {},
+                            options = ctrl.bbOptions;
+
+                        if (options && options.clearFilters) {
+                            options.clearFilters(args);
+                            $scope.updateFilters(args.filters);
+                        }
+                    };
+
+                    if (angular.isUndefined(ctrl.bbGridFiltersSummaryDismissable)) {
+                        ctrl.bbGridFiltersSummaryDismissable = true;
                     }
-                };
 
-                $scope.resources = bbResources;
+                    $scope.resources = bbResources;
+                }
 
+                ctrl.$onInit = onInit;
             }],
             link: function ($scope, element, attrs, bbGrid) {
                 /*jslint unparam: true */

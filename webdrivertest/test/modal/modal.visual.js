@@ -1,29 +1,60 @@
-
-/*global describe, it, browser, beforeEach, expect, require */
+/*global describe, it, browser */
 
 describe('modals', function () {
     'use strict';
 
-    var options = {};
-
-    beforeEach(function (done) {
-        require('../common').initWebdriverCss(browser, options, done);
+    it('match the baseline modal screenshot', function () {
+        return browser
+            .setupTest('/modal/fixtures/test.full.html')
+            .compareScreenshot({
+                screenshotName: 'modal',
+                selector: '#screenshot-modal',
+                checkAccessibility: true
+            });
     });
 
+    it('match the baseline modal with context menu screenshot', function () {
+        return browser
+            .setupTest('/modal/fixtures/test.full.html')
+            .click('.bb-test-dropdown')
+            .pause(1000)
+            .click('.bb-context-menu-btn')
+            .compareScreenshot({
+                screenshotName: 'modal_dropdown',
+                selector: '.modal-content',
+                checkAccessibility: true
+            })
+            .click('.bb-modal .modal-dialog .close');
+    });
 
-    it('should take modal screenshots', function (done) {
-        var screenshotName = 'modal',
-            pageName = options.prefix + screenshotName + '_full';
-        browser
-            .url('/modal/fixtures/test.full.html')
-            .webdrivercss(pageName, [
-                {
-                    name: screenshotName,
-                    elem: '#screenshot-modal'
-                }
-            ], function (err, res) {
-                expect(err).toBe(undefined);
-                expect(res[screenshotName][0].isWithinMisMatchTolerance).toBe(true);
-            }).call(done);
+    it('should match the baseline full-page modal screenshot', function () {
+
+        return browser
+            .setupTest('/modal/fixtures/test.full.html')
+            .click('.bb-test-fullpage')
+            .pause(1000)
+            .compareScreenshot({
+                screenshotName: 'modal_fullpage',
+                selector: 'body',
+                checkAccessibility: true
+            })
+            .click('.bb-modal .modal-dialog .close');
+    });
+
+    it('should match the baseline full-page modal screenshot when one is over another', function () {
+
+        return browser
+            .setupTest('/modal/fixtures/test.full.html')
+            .click('.bb-test-fullpage')
+            .pause(1000)
+            .click('.bb-btn-secondary')
+            .pause(1000)
+            .compareScreenshot({
+                screenshotName: 'modal_fullpage_second',
+                selector: 'body',
+                checkAccessibility: true
+            })
+            .click('.bb-modal .modal-dialog .close')
+            .click('.bb-modal .modal-dialog .close');
     });
 });

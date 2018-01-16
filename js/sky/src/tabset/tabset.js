@@ -18,7 +18,7 @@
                     liEl;
 
                 if (angular.isDefined(attr.bbTabsetAdd) || angular.isDefined(attr.bbTabsetOpen)) {
-                    ulEl = el.find('ul');
+                    ulEl = el.children('ul');
                     liEl = angular.element(getTemplate($templateCache, 'tabbutton'));
                     ulEl.append(liEl);
 
@@ -44,7 +44,7 @@
 
     tabset.$inject = ['$compile', '$templateCache'];
 
-    function BBTabsetCollapsibleController($scope) {
+    function BBTabsetCollapsibleController($scope, $timeout) {
         var self = this;
 
         self.updateCollapsibleHeader = function (header) {
@@ -52,26 +52,20 @@
         };
 
         self.tabAdded = function () {
-            if (!$scope.bbTabsetOptions) {
-                $scope.bbTabsetOptions = {
-                    isSmallScreen: false,
-                    tabCount: 0
-                };
-            }
-
-            if ($scope.bbTabsetOptions.isSmallScreen) {
-                $scope.setupCollapsibleTabs($scope.bbTabsetOptions.isSmallScreen && $scope.bbTabsetOptions.tabCount > 1);
-            }
-            $scope.bbTabsetOptions.tabCount++;
+            $timeout(function () {
+                $scope.bbTabsetOptions.tabCount++;
+                if ($scope.bbTabsetOptions.isSmallScreen) {
+                    $scope.setupCollapsibleTabs($scope.bbTabsetOptions.isSmallScreen && $scope.bbTabsetOptions.tabCount > 1);
+                }
+            });
         };
 
         self.tabRemoved = function () {
             $scope.bbTabsetOptions.tabCount--;
         };
-
     }
 
-    BBTabsetCollapsibleController.$inject = ['$scope'];
+    BBTabsetCollapsibleController.$inject = ['$scope', '$timeout'];
 
     function bbTabsetCollapsible($compile, $templateCache, $window, bbMediaBreakpoints) {
         return {
@@ -81,9 +75,30 @@
                 var lastWindowWidth,
                     tabCollapseId = $scope.$id;
 
+                function hasCollapsedTabs() {
+                    return el.children('ul.nav.nav-tabs').length < 1;
+                }
+
+                function getTabUl() {
+                    var ulEl = el.children('ul.nav.nav-tabs');
+                    if (ulEl.length > 0) {
+                        return ulEl.eq(0);
+                    } else {
+                        return el.find('> .bb-tabset-dropdown.nav.nav-tabs > ul').eq(0);
+                    }
+                }
+
+                function getAddOpenButtons() {
+                    if (hasCollapsedTabs()) {
+                        return el.find('> .bb-tabset-dropdown > .bb-tab-button-wrap');
+                    } else {
+                        return el.find('> ul.nav.nav-tabs > li.bb-tab-button > .bb-tab-button-wrap');
+                    }
+                }
 
                 function getBootstrapTabs() {
-                    return el.find('li:not(.bb-tab-button):not(.bb-tabset-dropdown)');
+                    var ulEl = getTabUl();
+                    return ulEl.children('li:not(.bb-tab-button):not(.bb-tabset-dropdown)').eq(0);
                 }
 
                 function getDropdownEl() {
@@ -92,7 +107,8 @@
 
                 function setTabMaxWidth() {
                     //later this will resize tabs to fit the window
-                    el.find('ul.nav-tabs li a').css('max-width', '');
+                    var ulEl = getTabUl();
+                    ulEl.find('> li > a').css('max-width', '');
                 }
 
                 function setDropdownMaxWidth() {
@@ -104,7 +120,7 @@
 
                     availableWidth = el.width();
 
-                    addOpenButtonEl = el.find('.bb-tab-button-wrap');
+                    addOpenButtonEl = getAddOpenButtons();
 
                     for (i = 0; i < addOpenButtonEl.length; i++) {
                         addOpenWidth += addOpenButtonEl.eq(i).width();
@@ -112,9 +128,14 @@
 
                     dropdownTextMaxWidth = availableWidth - addOpenWidth - DROPDOWN_CARET_WIDTH - TAB_PADDING;
 
-                    el.find('.bb-tab-header-text').css('max-width', (dropdownTextMaxWidth.toString() + 'px'));
+                    /* If widths are available, we can override the default max-width of the dropdown button and menu to be more specific */
+                    if (dropdownTextMaxWidth > 0) {
+                        el.find('> .bb-tabset-dropdown > .bb-tab-dropdown-button > .bb-tab-header-text').css('max-width', (dropdownTextMaxWidth.toString() + 'px'));
+                    }
 
-                    el.find('.bb-tabset-dropdown ul.dropdown-menu li a').css('max-width', (availableWidth.toString() + 'px'));
+                    if (availableWidth > 0) {
+                        el.find('> .bb-tabset-dropdown > ul.dropdown-menu > li >  a').css('max-width', (availableWidth.toString() + 'px'));
+                    }
 
                 }
 
@@ -125,11 +146,10 @@
                         dropdownButtonsEl;
 
                     tabsEl = getBootstrapTabs();
-                    dropdownButtonsEl = el.find('.bb-tab-button-wrap');
-
-                    ulEl = el.find('ul:not(.bb-tabset-dropdown)');
+                    dropdownButtonsEl = getAddOpenButtons();
+                    ulEl = getTabUl();
                     if (isCollapsed) {
-                        dropdownContainerEl = el.find('.bb-tabset-dropdown');
+                        dropdownContainerEl = el.children('.bb-tabset-dropdown');
 
                         ulEl.addClass('dropdown-menu');
                         ulEl.removeClass('nav');
@@ -144,7 +164,7 @@
 
                         el.prepend(ulEl);
 
-                        ulEl.find('.bb-tab-button').append(dropdownButtonsEl);
+                        ulEl.children('.bb-tab-button').append(dropdownButtonsEl);
                         setTabMaxWidth();
                     }
                 }
@@ -155,12 +175,11 @@
                     $scope.bbTabsetOptions.isSmallScreen = newBreakpoints.xs;
                     setupCollapsibleTabs(newBreakpoints.xs && ($scope.bbTabsetOptions.tabCount > 1));
                 }
-                if (!$scope.bbTabsetOptions) {
-                    $scope.bbTabsetOptions = {
-                        isSmallScreen: false,
-                        tabCount: 0
-                    };
-                }
+
+                $scope.bbTabsetOptions = {
+                    isSmallScreen: false,
+                    tabCount: 0
+                };
 
                 el.prepend($compile(getDropdownEl())($scope));
 
@@ -177,10 +196,11 @@
 
                 bbMediaBreakpoints.register(mediaBreakpointHandler);
 
-                // Show initial scroll animation whenever the window width changes.
                 $($window).on('resize.tabcollapse' + tabCollapseId, function () {
                     var windowWidth = $($window).width();
 
+                    /* istanbul ignore else */
+                    /* sanity check */
                     if (lastWindowWidth !== windowWidth && $scope.bbTabsetOptions.isSmallScreen && $scope.bbTabsetOptions.tabCount > 1) {
                         setDropdownMaxWidth();
                     }
@@ -237,11 +257,14 @@
         };
     }
 
-    function tab() {
+    function tab($log, $parse, $timeout) {
         return {
-            require: '?^bbTabsetCollapsible',
-            link: function ($scope, el, attr, bbTabsetCollapsibleCtrl) {
-                var tabScope = el.isolateScope();
+            require: ['?^bbTabsetCollapsible', '^uibTabset'],
+            link: function ($scope, el, attr, ctrls) {
+                var tabScope = el.isolateScope(),
+                    bbTabsetCollapsibleCtrl = ctrls[0],
+                    uibTabsetCtrl = ctrls[1],
+                    activeModel;
 
                 function getTabHeading() {
                     return tabScope.heading;
@@ -250,16 +273,310 @@
                 if (bbTabsetCollapsibleCtrl !== null && !angular.isDefined(attr.bbTabCollapseHeader)) {
                     collapsibleTabTitle($scope, el, bbTabsetCollapsibleCtrl, getTabHeading);
                 }
+
+                if (angular.isDefined(attr.active)) {
+                    $timeout(function () {
+                        $log.warn('uibTab active attribute is deprecated, instead track active state on uibTabset');
+
+                        activeModel = $parse(attr.active);
+
+
+                        $scope.$watch(function () {
+                            return activeModel($scope);
+                        }, function (newValue) {
+                            if (newValue === true && uibTabsetCtrl.active !== tabScope.index) {
+                                uibTabsetCtrl.select(tabScope.index);
+                            }
+                        });
+
+                        tabScope.$watch(function () {
+                            return tabScope.active;
+                        }, function (newValue) {
+                            if (angular.isDefined(newValue) && newValue !== activeModel($scope)) {
+                                activeModel.assign($scope, newValue);
+                            }
+                        });
+                    });
+                }
             }
         };
     }
 
-    angular.module('sky.tabset', ['ui.bootstrap.tabs', 'sky.mediabreakpoints'])
+    tab.$inject = ['$log', '$parse', '$timeout'];
+
+    function bbTabHeadingXs($compile, $templateCache) {
+        return {
+            require: 'uibTab',
+            link: function ($scope, el, attr) {
+                var anchorEl;
+
+                anchorEl = el.children('a');
+                anchorEl.wrapInner(getTemplate($templateCache, 'largeheading'));
+                anchorEl.append($compile(getTemplate($templateCache, 'smallheading'))($scope));
+
+
+                $scope.bbTabHeadingXs = attr.bbTabHeadingXs;
+
+                $scope.$watch(function () {
+                    return attr.bbTabHeadingXs;
+                }, function (newValue) {
+                    $scope.bbTabHeadingXs = newValue;
+                });
+            }
+        };
+    }
+
+    bbTabHeadingXs.$inject = ['$compile', '$templateCache'];
+
+    function BBVerticalTabsetController() {
+        var self = this;
+
+        self.addTabGroup = addTabGroup;
+        self.tabGroups = [];
+
+        function addTabGroup(tabGroup) {
+            // Property is used in ARIA attributes. Ensure that it is defined
+            // so that ARIA attributes are properly initialized.
+            tabGroup.isOpen = tabGroup.isOpen || false;
+            self.tabGroups.push(tabGroup);
+        }
+    }
+
+    function bbVerticalTabset($log, $parse, bbMediaBreakpoints) {
+        return {
+            controller: BBVerticalTabsetController,
+            link: link,
+            require: ['uibTabset', 'bbVerticalTabset'],
+            restrict: 'A'
+        };
+
+        function link($scope, el, attr, ctrls) {
+            var uibTabsetCtrl = ctrls[0],
+                bbVerticalTabsetCtrl = ctrls[1],
+                scope = el.isolateScope(),
+                unbindWatch;
+
+            if (angular.isDefined(attr.bbTabsetAdd)) {
+                $log.warn('uibTabset bbTabsetAdd attribute is incompatible with bbVerticalTabset, it will be ignored');
+            }
+            if (angular.isDefined(attr.bbTabsetOpen)) {
+                $log.warn('uibTabset bbTabsetOpen attribute is incompatible with bbVerticalTabset, it will be ignored');
+            }
+            if (angular.isDefined(attr.bbTabsetCollapsible)) {
+                $log.warn('using the uibTabset bbTabsetCollapsible attribute with bbVerticalTabset is not supported, it may yield undesirable results');
+            }
+            if (angular.isDefined(attr.justified)) {
+                $log.warn('uibTabset justified attribute is incompatible with bbVerticalTabset, it will be ignored');
+            }
+            if (angular.isDefined(attr.type) && $parse(attr.type)($scope) !== 'tabs') {
+                $log.warn('uibTabset type attribute values other than \'tabs\' are incompatible with bbVerticalTabset and will be ignored');
+            }
+            if (angular.isDefined(attr.vertical) && !$parse(attr.vertical)($scope)) {
+                $log.warn('uibTabset vertical attribute values other than true are incompatible with bbVerticalTabset and will be ignored');
+            }
+
+            scope.closeOthers = angular.isDefined(attr.bbVerticalTabsetCloseOthers) ?
+                $parse(attr.bbVerticalTabsetCloseOthers)($scope) :
+                false;
+            scope.showTabs = true;
+
+            bbMediaBreakpoints.register(mobileBreakpointHandler);
+            $scope.$on('$destroy', function () {
+                bbMediaBreakpoints.unregister(mobileBreakpointHandler);
+            });
+            $scope.$on('reinitializeVerticalTabsetDisplay', function () {
+                scope.showTabs = scope.isMobile;
+                if (scope.isMobile) {
+                    uibTabsetCtrl.active = -1;
+                }
+            });
+
+            unbindWatch = $scope.$watch(
+                function () {
+                    return bbVerticalTabsetCtrl.tabGroups.length > 0;
+                },
+                function (val) {
+                    var group;
+                    if (!val) {
+                        // Remove tablist role for accessibility.
+                        group = el.find('.panel-group');
+                        group.removeAttr('role');
+                    }
+                    unbindWatch();
+                }
+            );
+            $scope.$watch(
+                function () {
+                    return $parse(attr.bbVerticalTabsetCloseOthers)($scope);
+                },
+                function (val) {
+                    scope.closeOthers = val;
+                }
+            );
+            $scope.$watch(
+                function () {
+                    return uibTabsetCtrl.active;
+                },
+                function (value) {
+                    scope.showTabs = angular.isUndefined(value) || value === null || value < 0;
+                    activateTabGroup(value);
+                }
+            );
+
+            if (angular.isDefined(uibTabsetCtrl.active)) {
+                activateTabGroup(uibTabsetCtrl.active);
+            }
+
+            function mobileBreakpointHandler(breakpoints) {
+                scope.isMobile = breakpoints.xs;
+            }
+
+            function activateTabGroup(newIndex) {
+                var activeGroup = bbVerticalTabsetCtrl.tabGroups
+                    .filter(function (tabGroup) {
+                        return tabGroup.tabs.filter(function (tab) {
+                            return tab.index === newIndex || tab.active;
+                        }).length > 0;
+                    });
+
+                bbVerticalTabsetCtrl.tabGroups
+                    .forEach(function (tabGroup) {
+                        tabGroup.active = false;
+                    });
+
+                if (activeGroup.length > 0) {
+                    activeGroup[0].activateTabGroup();
+                }
+            }
+        }
+    }
+
+    bbVerticalTabset.$inject = ['$log', '$parse', 'bbMediaBreakpoints'];
+
+    function BBVerticalTabsetGroupController() {
+        var self = this;
+
+        self.addTab = addTab;
+        self.activateTabGroup = activateTabGroup;
+        self.tabs = [];
+
+        function addTab(tab) {
+            self.tabs.push(tab);
+        }
+        function activateTabGroup() {
+            self.active = true;
+            self.isOpen = true;
+        }
+    }
+
+    function bbVerticalTabsetGroup() {
+        return {
+            bindToController: true,
+            controller: BBVerticalTabsetGroupController,
+            controllerAs: 'bbVerticalTabsetGroup',
+            link: link,
+            replace: true,
+            require: ['^bbVerticalTabset', 'bbVerticalTabsetGroup'],
+            restrict: 'A',
+            scope: {
+                heading: '@bbVerticalTabsetGroupHeading',
+                isDisabled: '=?bbVerticalTabsetGroupIsDisabled',
+                isOpen: '=?bbVerticalTabsetGroupIsOpen'
+            },
+            templateUrl: function (el, attr) {
+                return angular.isDefined(attr.bbVerticalTabsetGroupTemplateUrl) ?
+                    attr.bbVerticalTabsetGroupTemplateUrl :
+                    'sky/templates/tabset/verticaltabsetgroup.html';
+            },
+            transclude: true
+        };
+
+        function link($scope, el, attr, ctrls) {
+            var bbVerticalTabsetCtrl = ctrls[0],
+                bbVerticalTabsetGroupCtrl = ctrls[1];
+
+            bbVerticalTabsetCtrl.addTabGroup(bbVerticalTabsetGroupCtrl);
+        }
+    }
+
+    function uibTabsetDirectiveDecorator($delegate) {
+        decorateTemplateUrl(
+             $delegate[0],
+            'sky/templates/tabset/verticaltabset.html',
+            function (el, attr) {
+                return angular.isDefined(attr.bbVerticalTabset);
+            }
+        );
+        return $delegate;
+    }
+
+    uibTabsetDirectiveDecorator.$inject = ['$delegate'];
+
+    function uibTabDirectiveDecorator($delegate) {
+        decorateLink(
+            $delegate[0],
+            '^bbVerticalTabsetGroup',
+            function ($scope, el, attr, ctrl) {
+                ctrl.addTab($scope);
+            }
+        );
+        return $delegate;
+    }
+
+    uibTabDirectiveDecorator.$inject = ['$delegate'];
+
+    function decorateTemplateUrl(delegate, newTemplateUrl, conditionFn) {
+        var originalTemplateUrl = delegate.templateUrl;
+        delegate.templateUrl = function (el, attr) {
+            if (conditionFn(el, attr)) {
+                return angular.isDefined(attr.templateUrl) ?
+                    attr.templateUrl :
+                    newTemplateUrl;
+            }
+            return angular.isFunction(originalTemplateUrl) ?
+                originalTemplateUrl.apply(this, arguments) :
+                /* istanbul ignore next: sanity check */
+                originalTemplateUrl;
+        };
+    }
+
+    function decorateLink(delegate, requiredDirective, linkFn) {
+        var originalRequireIsArray = angular.isArray(delegate.require),
+            originalLink = delegate.link,
+            newDir = '?'.concat(requiredDirective);
+        delegate.require = originalRequireIsArray ?
+            /* istanbul ignore next: sanity check */
+            [newDir].concat(delegate.require) :
+            [newDir, delegate.require];
+        delegate.compile = function () {
+            return function ($scope, el, attr, ctrls, transclude) {
+                if (ctrls[0] !== null) {
+                    linkFn.call(this, $scope, el, attr, ctrls[0], transclude);
+                }
+                return originalLink.call(
+                    this,
+                    $scope,
+                    el,
+                    attr,
+                    originalRequireIsArray ?
+                        /* istanbul ignore next: sanity check */
+                        ctrls.slice(1) :
+                        ctrls[1],
+                    transclude
+                );
+            };
+        };
+    }
+
+    angular.module('sky.tabset', ['ui.bootstrap.tabs', 'sky.mediabreakpoints', 'sky.resources'])
         .directive('uibTabset', tabset)
-        .directive('tabset', tabset)
         .directive('bbTabsetCollapsible', bbTabsetCollapsible)
         .directive('bbTabCollapseHeader', bbTabCollapseHeader)
-        .directive('tab', tab)
-        .directive('uibTab', tab);
+        .directive('uibTab', tab)
+        .directive('bbTabHeadingXs', bbTabHeadingXs)
+        .directive('bbVerticalTabset', bbVerticalTabset)
+        .directive('bbVerticalTabsetGroup', bbVerticalTabsetGroup)
+        .decorator('uibTabsetDirective', uibTabsetDirectiveDecorator)
+        .decorator('uibTabDirective', uibTabDirectiveDecorator);
 
 }(jQuery));

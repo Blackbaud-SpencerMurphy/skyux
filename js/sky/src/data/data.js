@@ -1,4 +1,4 @@
-/*global angular, jQuery, require */
+/*global angular, jQuery */
 
 (function ($) {
     'use strict';
@@ -13,7 +13,8 @@
             p,
             url;
 
-        /*istanbul ignore else: sanity check */
+        /*istanbul ignore else */
+        /* sanity check */
         if (option) {
             if (angular.isString(option) || option.BB_DATA_POST) {
                 url = option;
@@ -168,7 +169,7 @@
 
                 // Grab the portion before the query string and get the fully-qualified URL.
                 url = parts.shift();
-                url = require.toUrl(url);
+                url = $window.require.toUrl(url);
 
                 // If there was anything after the first question mark, put it back.
                 url += '?' + parts.join('');

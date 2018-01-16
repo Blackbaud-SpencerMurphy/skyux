@@ -1,30 +1,30 @@
-/* global describe, it, browser, beforeEach,  expect, require */
+/* global describe, it, browser */
 
 
 describe('actionbar', function () {
     'use strict';
 
-    var options = {};
+    function createActionbarOptions() {
+        return {
+            screenshotName: 'actionbar',
+            selector: '#screenshot-actionbar',
+            checkAccessibility: true
+        };
+    }
 
-    beforeEach(function (done) {
-        require('../common').initWebdriverCss(browser, options, done);
+    it('should match the baseline actionbar screenshot', function () {
+        var options = createActionbarOptions();
+
+        return browser
+            .setupTest('/actionbar/fixtures/test.full.html')
+            .compareScreenshot(options);
     });
 
-    it('should take an actionbar screenshot', function (done) {
-        var screenshotName = 'actionbar',
-            pageName = options.prefix + screenshotName + '_full';
-        browser
-            .url('/actionbar/fixtures/test.full.html')
-            .webdrivercss(pageName, [
-                {
-                    name: screenshotName,
-                    elem: '#screenshot-actionbar',
-                    screenWidth: [480, 1280]
-                }
-            ], function (err, res) {
-                expect(err).toBe(undefined);
-                expect(res[screenshotName][0].isWithinMisMatchTolerance).toBe(true);
-            })
-            .call(done);
+    it('should match the baseline actionbar screenshot on small screens', function () {
+        var options = createActionbarOptions();
+
+        return browser
+            .setupTest('/actionbar/fixtures/test.full.html', 480)
+            .compareScreenshot(options);
     });
 });

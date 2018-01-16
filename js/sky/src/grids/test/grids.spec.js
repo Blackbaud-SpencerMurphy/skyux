@@ -28,7 +28,7 @@ describe('Grid directive', function () {
     }
 
     function searchTextChanged() {
-        if (angular.isDefined($scope.locals.gridOptions.searchText) && $scope.locals.gridOptions !== '') {
+        if (angular.isDefined($scope.locals.gridOptions.searchText) && $scope.locals.gridOptions.searchText !== '') {
             $scope.locals.gridOptions.data = [dataSet1[0]];
         } else {
             $scope.locals.gridOptions.data = dataSet1;
@@ -63,8 +63,16 @@ describe('Grid directive', function () {
         $compile(el)($scope);
 
         $scope.$digest();
-
+        $timeout.flush();
         return el;
+    }
+
+    function timeoutFlushIfAvailable() {
+        try {
+            $timeout.verifyNoPendingTasks();
+        } catch (aException) {
+            $timeout.flush();
+        }
     }
 
     function setGridData(data) {
@@ -133,7 +141,8 @@ describe('Grid directive', function () {
                         caption: 'Name',
                         jsonmap: 'name',
                         id: 1,
-                        name: 'name'
+                        name: 'name',
+                        title: false
                     },
                     {
                         caption: 'Instrument',
@@ -243,7 +252,9 @@ describe('Grid directive', function () {
         expect(cellEl.length).toBe(3);
 
         expect(cellEl.eq(0)).toHaveText('Paul');
+        expect(cellEl.eq(0)).not.toHaveAttr('title', 'Paul');
         expect(cellEl.eq(1)).toHaveText('Bass');
+        expect(cellEl.eq(1)).toHaveAttr('title', 'Bass');
         expect(cellEl.eq(2)).toHaveText('Lorem');
 
         cellEl = rowEl.eq(2).find('td');
@@ -264,10 +275,18 @@ describe('Grid directive', function () {
 
     });
 
-    it('can load more data when clicking load more through a promise', function () {
+    function verifyRow(rowEl, rowIndex, name, instrument, text) {
+        var cellEl = rowEl.eq(rowIndex).find('td');
 
+        expect(cellEl.length).toBe(3);
+
+        expect(cellEl.eq(0)).toHaveText(name);
+        expect(cellEl.eq(1)).toHaveText(instrument);
+        expect(cellEl.eq(2)).toHaveText(text);
+    }
+
+    it('can load more data when clicking load more through a promise', function () {
         var rowEl,
-            cellEl,
             loadMoreButton;
 
         locals.gridOptions.hasMoreRows = true;
@@ -287,37 +306,312 @@ describe('Grid directive', function () {
         rowEl = getGridRows(el);
 
         expect(rowEl.length).toBe(8);
-        cellEl = rowEl.eq(4).find('td');
 
-        expect(cellEl.length).toBe(3);
+        verifyRow(rowEl, 4, 'John', 'Rhythm guitar', '');
+        verifyRow(rowEl, 5, 'Paul', 'Bass', 'Lorem');
+        verifyRow(rowEl, 6, 'George', 'Lead guitar', '');
+        verifyRow(rowEl, 7, 'Ringo', 'Drums', '');
 
-        expect(cellEl.eq(0)).toHaveText('John');
-        expect(cellEl.eq(1)).toHaveText('Rhythm guitar');
-        expect(cellEl.eq(2)).toHaveText('');
+    });
 
-        cellEl = rowEl.eq(5).find('td');
+    function setupScrollInfinite(inView, parentScrollable) {
+        var windowVal = 10,
+            offsetVal;
+        offsetVal = inView ? 0 : 30;
 
-        expect(cellEl.length).toBe(3);
+        spyOn($.fn, 'scrollTop').and.returnValue(windowVal);
+        spyOn($.fn, 'height').and.returnValue(windowVal);
 
-        expect(cellEl.eq(0)).toHaveText('Paul');
-        expect(cellEl.eq(1)).toHaveText('Bass');
-        expect(cellEl.eq(2)).toHaveText('Lorem');
+        if (!parentScrollable) {
+            spyOn($.fn, 'offset').and.returnValue({ top: offsetVal });
+        } else {
+            spyOn($.fn, 'position').and.returnValue({ top: offsetVal });
+        }
 
-        cellEl = rowEl.eq(6).find('td');
+    }
 
-        expect(cellEl.length).toBe(3);
 
-        expect(cellEl.eq(0)).toHaveText('George');
-        expect(cellEl.eq(1)).toHaveText('Lead guitar');
-        expect(cellEl.eq(2)).toHaveText('');
 
-        cellEl = rowEl.eq(7).find('td');
+    it('can load more data when using infinite scroll through a promise', function () {
 
-        expect(cellEl.length).toBe(3);
+        var rowEl,
+            infiniteHtml = '<div><bb-grid bb-grid-options="locals.gridOptions" bb-grid-infinite-scroll></bb-grid></div>';
 
-        expect(cellEl.eq(0)).toHaveText('Ringo');
-        expect(cellEl.eq(1)).toHaveText('Drums');
-        expect(cellEl.eq(2)).toHaveText('');
+        locals.gridOptions.hasMoreRows = true;
+
+        $scope.$on('loadMoreRows', function (event, data) {
+            locals.gridOptions.hasMoreRows = false;
+            data.promise.resolve(angular.copy(dataSet1));
+        });
+
+        el = setUpGrid(infiniteHtml, locals);
+
+        setGridData(dataSet1);
+
+        setupScrollInfinite(true);
+
+        $($window).scroll();
+        timeoutFlushIfAvailable();
+
+        rowEl = getGridRows(el);
+
+        expect(rowEl.length).toBe(8);
+
+        verifyRow(rowEl, 4, 'John', 'Rhythm guitar', '');
+        verifyRow(rowEl, 5, 'Paul', 'Bass', 'Lorem');
+        verifyRow(rowEl, 6, 'George', 'Lead guitar', '');
+        verifyRow(rowEl, 7, 'Ringo', 'Drums', '');
+    });
+
+    it('can load more data when using infinite scroll through a promise with jsonmap', function () {
+
+        var rowEl,
+            infiniteHtml = '<div><bb-grid bb-grid-options="locals.gridOptions" bb-grid-infinite-scroll></bb-grid></div>';
+
+        locals.gridOptions.hasMoreRows = true;
+
+        locals.gridOptions.columns = [
+                    {
+                        caption: 'Name',
+                        jsonmap: 'myname',
+                        id: 1,
+                        name: 'name',
+                        title: false
+                    },
+                    {
+                        caption: 'Instrument',
+                        jsonmap: 'instrument',
+                        id: 2,
+                        name: 'instrument'
+                    },
+                    {
+                        caption: 'Biography',
+                        jsonmap: 'bio',
+                        id: 3,
+                        name: 'bio'
+                    }
+                ];
+
+        dataSet1 = [
+            {
+                id: 'blarrrg',
+                myname: 'John',
+                instrument: 'Rhythm guitar'
+            },
+            {
+                myname: 'Paul',
+                instrument: 'Bass',
+                bio: 'Lorem'
+            },
+            {
+                myname: 'George',
+                instrument: 'Lead guitar'
+            },
+            {
+                myname: 'Ringo',
+                instrument: 'Drums'
+            }
+        ];
+        $scope.$on('loadMoreRows', function (event, data) {
+            locals.gridOptions.hasMoreRows = false;
+            data.promise.resolve(angular.copy(dataSet1));
+        });
+
+        el = setUpGrid(infiniteHtml, locals);
+
+        setGridData(dataSet1);
+
+        setupScrollInfinite(true);
+
+        $($window).scroll();
+        timeoutFlushIfAvailable();
+
+        rowEl = getGridRows(el);
+
+        expect(rowEl.length).toBe(8);
+
+        verifyRow(rowEl, 4, 'John', 'Rhythm guitar', '');
+        verifyRow(rowEl, 5, 'Paul', 'Bass', 'Lorem');
+        verifyRow(rowEl, 6, 'George', 'Lead guitar', '');
+        verifyRow(rowEl, 7, 'Ringo', 'Drums', '');
+    });
+
+    it('can load more data when using infinite scroll through concatenation and resolving a promise', function () {
+
+        var rowEl,
+            infiniteHtml = '<div><bb-grid bb-grid-options="locals.gridOptions" bb-grid-infinite-scroll></bb-grid></div>';
+
+        locals.gridOptions.hasMoreRows = true;
+
+        $scope.$on('loadMoreRows', function (event, data) {
+            locals.gridOptions.hasMoreRows = false;
+            locals.gridOptions.data = locals.gridOptions.data.concat(angular.copy(dataSet1));
+            data.promise.resolve();
+        });
+
+        el = setUpGrid(infiniteHtml, locals);
+
+        setGridData(dataSet1);
+
+        setupScrollInfinite(true);
+
+        $($window).scroll();
+        timeoutFlushIfAvailable();
+
+        rowEl = getGridRows(el);
+
+        expect(rowEl.length).toBe(8);
+
+        verifyRow(rowEl, 4, 'John', 'Rhythm guitar', '');
+        verifyRow(rowEl, 5, 'Paul', 'Bass', 'Lorem');
+        verifyRow(rowEl, 6, 'George', 'Lead guitar', '');
+        verifyRow(rowEl, 7, 'Ringo', 'Drums', '');
+    });
+
+    it('can load more data when using infinite scroll through concatenation and resolving a promise with jsonmap', function () {
+
+        var rowEl,
+            infiniteHtml = '<div><bb-grid bb-grid-options="locals.gridOptions" bb-grid-infinite-scroll></bb-grid></div>';
+
+        locals.gridOptions.hasMoreRows = true;
+
+        locals.gridOptions.columns = [
+                    {
+                        caption: 'Name',
+                        jsonmap: 'myname',
+                        id: 1,
+                        name: 'name',
+                        title: false
+                    },
+                    {
+                        caption: 'Instrument',
+                        id: 2,
+                        name: 'instrument'
+                    },
+                    {
+                        caption: 'Biography',
+                        jsonmap: 'bio',
+                        id: 3,
+                        name: 'bio'
+                    }
+                ];
+
+        dataSet1 = [
+            {
+                id: 'blarrrg',
+                myname: 'John',
+                instrument: 'Rhythm guitar'
+            },
+            {
+                myname: 'Paul',
+                instrument: 'Bass',
+                bio: 'Lorem'
+            },
+            {
+                myname: 'George',
+                instrument: 'Lead guitar'
+            },
+            {
+                myname: 'Ringo',
+                instrument: 'Drums'
+            }
+        ];
+
+        $scope.$on('loadMoreRows', function (event, data) {
+            locals.gridOptions.hasMoreRows = false;
+            locals.gridOptions.data = locals.gridOptions.data.concat(angular.copy(dataSet1));
+            data.promise.resolve();
+        });
+
+        el = setUpGrid(infiniteHtml, locals);
+
+        setGridData(dataSet1);
+
+        setupScrollInfinite(true);
+
+        $($window).scroll();
+        timeoutFlushIfAvailable();
+
+        rowEl = getGridRows(el);
+
+        expect(rowEl.length).toBe(8);
+        verifyRow(rowEl, 4, 'John', 'Rhythm guitar', '');
+        verifyRow(rowEl, 5, 'Paul', 'Bass', 'Lorem');
+        verifyRow(rowEl, 6, 'George', 'Lead guitar', '');
+        verifyRow(rowEl, 7, 'Ringo', 'Drums', '');
+    });
+
+    it('does not reload data when options.data is changed through concatenation', function () {
+
+        var gridHtml = '<div><bb-grid bb-grid-options="locals.gridOptions"></bb-grid></div>',
+            rowEl;
+
+        el = setUpGrid(gridHtml, locals);
+
+        setGridData(dataSet1);
+
+        $scope.locals.gridOptions.data = $scope.locals.gridOptions.data.concat([{
+                name: 'Jimbo',
+                instrument: 'Trumpet'
+            }]);
+
+        $scope.$digest();
+
+        rowEl = getGridRows(el);
+
+        expect(rowEl.length).toBe(5);
+
+        verifyRow(rowEl, 0, 'John', 'Rhythm guitar', '');
+        verifyRow(rowEl, 1, 'Paul', 'Bass', 'Lorem');
+        verifyRow(rowEl, 2, 'George', 'Lead guitar', '');
+        verifyRow(rowEl, 3, 'Ringo', 'Drums', '');
+        verifyRow(rowEl, 4, 'Jimbo', 'Trumpet', '');
+
+    });
+
+    it('reloads data when options.data is not changed through concatenation', function () {
+
+        var gridHtml = '<div><bb-grid bb-grid-options="locals.gridOptions"></bb-grid></div>',
+            rowEl;
+
+        el = setUpGrid(gridHtml, locals);
+
+        setGridData(dataSet1);
+        $scope.locals.gridOptions.data.unshift({
+                name: 'Jimbo',
+                instrument: 'Trumpet'
+            });
+
+        $scope.$digest();
+
+        rowEl = getGridRows(el);
+
+        expect(rowEl.length).toBe(5);
+
+        verifyRow(rowEl, 1, 'John', 'Rhythm guitar', '');
+        verifyRow(rowEl, 2, 'Paul', 'Bass', 'Lorem');
+        verifyRow(rowEl, 3, 'George', 'Lead guitar', '');
+        verifyRow(rowEl, 4, 'Ringo', 'Drums', '');
+        verifyRow(rowEl, 0, 'Jimbo', 'Trumpet', '');
+
+    });
+
+    it('reinitializes the grid in response to a reInitGrid event', function () {
+        var gridWrapperHtml = '<div style="width: 600px;"><bb-grid bb-grid-options="locals.gridOptions"></bb-grid></div>';
+
+        locals.gridOptions.columns[0].width_all = 200;
+        locals.gridOptions.columns[1].width_all = 200;
+        locals.gridOptions.columns[2].width_all = 200;
+
+        el = setUpGrid(gridWrapperHtml, locals);
+
+        expect(el.find("td").eq(0).outerWidth()).toEqual(200);
+
+        locals.gridOptions.columns[0].width_all = 100;
+
+        $scope.$broadcast("reInitGrid");
+
+        expect(el.find("td").eq(0).outerWidth()).toEqual(100);
 
     });
 
@@ -442,7 +736,7 @@ describe('Grid directive', function () {
 
             paginationEl = paginationContainerEl.eq(0).find('li');
 
-            //default max of 5 pages shown with two arrow elements
+            //1 page shown with two arrow elements
             expect(paginationEl.length).toBe(3);
 
             //expect the correct numbers to be shown in pagination
@@ -461,10 +755,163 @@ describe('Grid directive', function () {
 
         });
 
+        it('loads a grid with pagination with boundary links enabled', function () {
+            var gridHtml = '<div><bb-grid bb-grid-options="locals.gridOptions" bb-grid-pagination="locals.paginationOptions"></bb-grid></div>',
+                pagedData1 = [
+                    {
+                        name: 'John',
+                        instrument: 'Rhythm guitar'
+                    },
+                    {
+                        name: 'Paul',
+                        instrument: 'Bass',
+                        bio: 'Lorem'
+                    },
+                    {
+                        name: 'George',
+                        instrument: 'Lead guitar'
+                    },
+                    {
+                        name: 'Ringo',
+                        instrument: 'Drums'
+                    }
+                ],
+                paginationContainerEl,
+                paginationEl;
+
+            el = setUpGrid(gridHtml);
+
+            $scope.$on('loadMoreRows', getTopAndSkipFromLoadMore);
+
+            $scope.locals.paginationOptions = {
+                recordCount: 60,
+                boundaryLinks: true,
+                itemsPerPage: 4
+            };
+
+            setGridData(pagedData1);
+
+            paginationContainerEl = el.find('.bb-grid-pagination-container');
+
+            expect(paginationContainerEl.length).toBe(1);
+
+            paginationEl = paginationContainerEl.eq(0).find('li');
+
+            //5 pages shown with arrow elements, ellipses, and final page
+            expect(paginationEl.length).toBe(9);
+
+            //expect the correct numbers to be shown in pagination
+            expect(paginationEl.eq(1)).toHaveText(1);
+            expect(paginationEl.eq(1)).toHaveClass('active');
+
+            //expect the ellipses to be shown properly
+            expect(paginationEl.eq(6)).toHaveText('...');
+
+            //expect movement to behave correctly
+            paginationEl.eq(5).find('a').click();
+            paginationEl = paginationContainerEl.eq(0).find('li');
+            expect(paginationEl.length).toBe(11);
+            expect(paginationEl.eq(2)).toHaveText(2);
+
+            paginationEl.eq(10).find('a').click();
+            paginationEl = paginationContainerEl.eq(0).find('li');
+            expect(paginationEl.eq(2)).toHaveText('...');
+            expect(paginationEl.eq(3)).toHaveText(4);
+
+            expect(top).toBe(4);
+            expect(skip).toBe(20);
+
+        });
+
+        it('loads a grid with pagination with the custom currentPage', function () {
+            var gridHtml = '<div><bb-grid bb-grid-options="locals.gridOptions" bb-grid-pagination="locals.paginationOptions"></bb-grid></div>',
+                pagedData1 = [
+                    {
+                        name: 'John',
+                        instrument: 'Rhythm guitar'
+                    },
+                    {
+                        name: 'Paul',
+                        instrument: 'Bass',
+                        bio: 'Lorem'
+                    },
+                    {
+                        name: 'George',
+                        instrument: 'Lead guitar'
+                    },
+                    {
+                        name: 'Ringo',
+                        instrument: 'Drums'
+                    }
+                ],
+                paginationContainerEl,
+                paginationEl;
+
+            el = setUpGrid(gridHtml);
+
+            $scope.$on('loadMoreRows', getTopAndSkipFromLoadMore);
+
+            $scope.locals.paginationOptions = {
+                recordCount: 30,
+                currentPage: 2
+            };
+
+            setGridData(pagedData1);
+
+            paginationContainerEl = el.find('.bb-grid-pagination-container');
+
+            expect(paginationContainerEl.length).toBe(1);
+
+            paginationEl = paginationContainerEl.eq(0).find('li');
+
+            //default max of 5 pages shown with two arrow elements
+            expect(paginationEl.length).toBe(7);
+
+            //expect the correct numbers to be shown in pagination
+            expect(paginationEl.eq(1)).toHaveText(1);
+            expect(paginationEl.eq(2)).toHaveClass('active');
+            expect(paginationEl.eq(2)).toHaveText(2);
+            expect(paginationEl.eq(3)).toHaveText(3);
+            expect(paginationEl.eq(4)).toHaveText(4);
+            expect(paginationEl.eq(5)).toHaveText(5);
+
+            //expect movement to behave correctly
+            paginationEl.eq(6).find('a').click();
+
+            expect(top).toBe(5);
+            expect(skip).toBe(10);
+
+        });
+
     });
 
 
     describe('sorting', function () {
+
+        it('applies appropriate classes on sortOptions change', function () {
+            var headerEl;
+
+
+            el = setUpGrid(basicGridHtml);
+
+            headerEl = getHeaders(el);
+
+            setGridData(dataSet1);
+
+            expect(headerEl.eq(0)).not.toHaveClass('sorting-asc');
+            expect(headerEl.eq(0)).not.toHaveClass('sorting-desc');
+
+            locals.gridOptions.sortOptions = {
+                column: 'name',
+                descending: true
+            };
+
+            $scope.$digest();
+
+            expect(headerEl.eq(0)).not.toHaveClass('sorting-asc');
+            expect(headerEl.eq(0)).toHaveClass('sorting-desc');
+        });
+
         it('respects excludedColumn property when sorting', function () {
             var headerEl;
 
@@ -570,6 +1017,77 @@ describe('Grid directive', function () {
             spanEl = rowEl.eq(0).find('span');
             expect(spanEl.eq(0)).toHaveClass('highlight');
 
+        });
+
+        it('highlights searched items in rows if search text is set and data is not reloaded', function () {
+            var rowEl,
+                searchEl,
+                searchIconEl,
+                spanEl;
+
+            $scope.$watch('locals.gridOptions.searchText', function () {
+                $scope.locals.gridOptions.data = dataSet1;
+            });
+
+            el = setUpGrid(basicGridHtml);
+
+            setGridData(dataSet1);
+
+            searchEl = getSearchBox(el);
+
+            searchEl.eq(0).val('John').trigger('change');
+
+            searchIconEl = getSearchIcon(el);
+            searchIconEl.eq(0).click();
+
+            $scope.$digest();
+
+            timeoutFlushIfAvailable();
+
+            rowEl = getGridRows(el);
+
+            spanEl = rowEl.eq(0).find('span');
+            expect(spanEl.eq(0)).toHaveClass('highlight');
+        });
+
+        it('clears searched item highlight when data set is not reloaded and items are searched again', function () {
+            var rowEl,
+                searchEl,
+                searchIconEl,
+                spanEl;
+
+            $scope.$watch('locals.gridOptions.searchText', function () {
+                $scope.locals.gridOptions.data = dataSet1;
+            });
+
+            el = setUpGrid(basicGridHtml);
+
+            setGridData(dataSet1);
+
+            searchEl = getSearchBox(el);
+
+            searchEl.eq(0).val('John').trigger('change');
+
+            searchIconEl = getSearchIcon(el);
+            searchIconEl.eq(0).click();
+
+            $scope.$digest();
+
+            timeoutFlushIfAvailable();
+
+            searchEl.eq(0).val('Paul').trigger('change');
+
+            searchIconEl = getSearchIcon(el);
+            searchIconEl.eq(0).click();
+            $scope.$digest();
+
+            rowEl = getGridRows(el);
+
+            spanEl = rowEl.eq(0).find('span');
+            expect(spanEl.eq(0)).not.toHaveClass('highlight');
+
+            spanEl = rowEl.eq(1).find('span');
+            expect(spanEl.eq(0)).toHaveClass('highlight');
         });
 
         it('can exclude columns from search', function () {
@@ -693,7 +1211,7 @@ describe('Grid directive', function () {
 
             expect(rowEl.eq(0).find('td div.bb-context-menu').eq(0)).toHaveClass('dropdown');
             expect(rowEl.eq(0).find('td button.bb-context-menu-btn').length).toBe(1);
-            expect($('body ul li a')[0]).toHaveText('Option1');
+            expect($('body .bb-dropdown-menu .bb-dropdown-item a')[0]).toHaveText('Option1');
 
             expect(rowEl.eq(1).find('td').eq(0)).toHaveClass('bb-grid-dropdown-cell');
             expect(rowEl.eq(1).find('td div.bb-context-menu').length).toBe(0);
@@ -704,7 +1222,7 @@ describe('Grid directive', function () {
             expect(rowEl.eq(3).find('td').eq(0)).toHaveClass('bb-grid-dropdown-cell');
             expect(rowEl.eq(3).find('td div.bb-context-menu').eq(0)).toHaveClass('dropdown');
             expect(rowEl.eq(3).find('td button.bb-context-menu-btn').length).toBe(1);
-            expect($('body ul li a')[0]).toHaveText('Option1');
+            expect($('body .bb-dropdown-menu .bb-dropdown-item a')[0]).toHaveText('Option1');
 
         });
 
@@ -719,13 +1237,14 @@ describe('Grid directive', function () {
             setGridData(dataSet1);
 
             rowEl = getGridRows(el);
-            expect($('body ul').eq(0)).toHaveCss({"display": "none"});
+            expect($('body .bb-dropdown-menu').eq(1)).toHaveCss({"display": "none"});
 
             contextEl = rowEl.eq(0).find('td div button').eq(0);
             contextEl.click();
-            expect($('body ul').eq(0)).not.toHaveCss({"display": "none"});
+            $scope.$digest();
+            expect($('body .bb-dropdown-menu').eq(1)).not.toHaveCss({"display": "none"});
 
-            optionEl = $('body ul li a').eq(0);
+            optionEl = $('body .bb-dropdown-menu .bb-dropdown-item a').eq(0);
             expect(contextMenuItemClicked).toBe(false);
             optionEl.click();
             expect(contextMenuItemClicked).toBe(true);
@@ -778,7 +1297,12 @@ describe('Grid directive', function () {
 
             expectedScrollbarWidth = bbWindow.getScrollbarWidth();
 
-            expect(topScrollbarEl[0].style.height).toBe(expectedScrollbarWidth + 'px');
+            if (expectedScrollbarWidth === 0) {
+                expect(['0px', '']).toContain(topScrollbarEl[0].style.height);
+            } else {
+                expect(topScrollbarEl[0].style.height).toBe(expectedScrollbarWidth + 'px');
+            }
+
         });
 
         it('will not emit an includedColumnsChanged event on media breakpoint change', function () {
@@ -852,7 +1376,7 @@ describe('Grid directive', function () {
 
             topScrollbarEl = el.find('.bb-grid-container .bb-grid-toolbar-container .bb-grid-top-scrollbar');
 
-            expect(topScrollbarEl[0].style.height).toBe('0px');
+            expect(['0px', '']).toContain(topScrollbarEl[0].style.height);
         });
 
         it('will scroll properly on header viewkeeper state change when fixed', function () {
@@ -1175,6 +1699,89 @@ describe('Grid directive', function () {
         });
     });
 
+    it('will emit a `columnsResized` event when columns are resized', function () {
+        var tableEl,
+            resizeHappened = false,
+            gridWrapperHtml = '<div style="width: 600px;"><bb-grid bb-grid-options="locals.gridOptions"></bb-grid></div>';
+
+        $scope.$on("columnsResized", function () {
+            resizeHappened = true;
+        });
+
+        locals.gridOptions.columns[0].width_all = 100;
+        locals.gridOptions.columns[1].width_all = 100;
+        locals.gridOptions.columns[2].width_all = 100;
+
+        el = setUpGrid(gridWrapperHtml, locals);
+
+        setGridData(dataSet1);
+
+        tableEl = el.find('.table-responsive .bb-grid-table');
+
+        tableEl[0].p.resizeStart({}, 0);
+        tableEl[0].p.resizeStop(50, 0);
+
+        expect(resizeHappened).toBe(true);
+
+    });
+
+    it('will adjust the column index in the `columnsResized` event when there is a contextmenu', function () {
+        var tableEl,
+            colIndex,
+            gridWrapperHtml = '<div style="width: 600px;"><bb-grid bb-grid-options="locals.gridOptions"></bb-grid></div>';
+
+        $scope.$on("columnsResized", function (event, data) {
+            colIndex = data.index;
+        });
+
+        locals.gridOptions.getContextMenuItems = getContextMenuItems;
+
+        locals.gridOptions.columns[0].width_all = 100;
+        locals.gridOptions.columns[1].width_all = 100;
+        locals.gridOptions.columns[2].width_all = 100;
+
+        el = setUpGrid(gridWrapperHtml, locals);
+
+        setGridData(dataSet1);
+
+        tableEl = el.find('.table-responsive .bb-grid-table');
+
+        tableEl[0].p.resizeStart({}, 2);
+        tableEl[0].p.resizeStop(50, 2);
+
+        expect(colIndex).toBe(1);
+
+    });
+
+    it('will adjust the column index in the `columnsResized` event when multiselect and contextmenu is present', function () {
+        var tableEl,
+            colIndex,
+            gridWrapperHtml = '<div style="width: 600px;"><bb-grid bb-grid-options="locals.gridOptions"></bb-grid></div>';
+
+        $scope.$on("columnsResized", function (event, data) {
+            colIndex = data.index;
+        });
+
+        locals.gridOptions.getContextMenuItems = getContextMenuItems;
+        locals.gridOptions.multiselect = true;
+
+        locals.gridOptions.columns[0].width_all = 100;
+        locals.gridOptions.columns[1].width_all = 100;
+        locals.gridOptions.columns[2].width_all = 100;
+
+        el = setUpGrid(gridWrapperHtml, locals);
+
+        setGridData(dataSet1);
+
+        tableEl = el.find('.table-responsive .bb-grid-table');
+
+        tableEl[0].p.resizeStart({}, 2);
+        tableEl[0].p.resizeStop(50, 2);
+
+        expect(colIndex).toBe(0);
+
+    });
+
     describe('media breakpoint column resizing', function () {
         it('can have xs, sm, md, and lg breakpoints set', function () {
             var callback,
@@ -1311,6 +1918,8 @@ describe('Grid directive', function () {
             expect($scope.locals.gridOptions.selectedColumnIds[0]).toBe(2);
             expect($scope.locals.gridOptions.selectedColumnIds[1]).toBe(1);
             expect($scope.locals.gridOptions.selectedColumnIds[2]).toBe(3);
+
+            expect(tableEl[0].p.sortable.options.helper).toBe('clone');
 
             headerEl = getHeaders(el);
 
@@ -1523,6 +2132,46 @@ describe('Grid directive', function () {
 
 
             expect(topScrollbarEl[0].style.width).toBe('599px');
+        });
+
+        it('handles an extended column when tablewrapper size is increased and then decreased', function () {
+            var tableWrapperEl,
+                tableEl,
+                lastColumnWidth,
+                gridWrapperHtml = '<div style="width: 600px;"><bb-grid bb-grid-options="locals.gridOptions"></bb-grid></div>',
+                windowEl = $($window);
+
+            locals.gridOptions.columns[0].width_all = 5;
+            locals.gridOptions.columns[1].width_all = 5;
+            locals.gridOptions.columns[2].width_all = 5;
+            el = setUpGrid(gridWrapperHtml, locals);
+
+            spyOn($.fn, 'setGridWidth').and.callThrough();
+            spyOn($.fn, 'setColProp').and.callThrough();
+
+            tableWrapperEl = getTableWrapperEl(el);
+
+            tableWrapperEl.width(299);
+            windowEl.trigger('resize');
+
+            tableWrapperEl.width(400);
+            windowEl.trigger('resize');
+
+            tableWrapperEl.width(299);
+            windowEl.trigger('resize');
+            tableEl = el.find('.table-responsive .bb-grid-table');
+
+            lastColumnWidth = tableEl[0].grid.headers[2].width;
+
+            tableWrapperEl.width(400);
+            windowEl.trigger('resize');
+
+            tableWrapperEl.width(299);
+            windowEl.trigger('resize');
+            tableEl = el.find('.table-responsive .bb-grid-table');
+
+            expect(tableEl[0].grid.headers[2].width).toBe(lastColumnWidth);
+
         });
 
         it('takes away from the extended column width when there is an extended column and the tableWrapper resize is less than the extended portion of the column on window resize', function () {
